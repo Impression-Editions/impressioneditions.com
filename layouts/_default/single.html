@@ -1,0 +1,39 @@
+{{ define "main" }}
+<div class="container">
+  <article class="book-detail">
+    <div class="cover-col">
+      {{ with .Params.cover }}
+        <img src="{{ . }}" alt="Cover of {{ $.Title }}">
+      {{ end }}
+      {{ partial "download-links.html" . }}
+    </div>
+
+    <div class="info-col">
+      <h1>{{ .Title }}</h1>
+      {{ with .Params.author }}
+        <p class="author-link">
+          by {{ with $.Params.author_slug }}<a href="/ebooks/{{ . }}/">{{ end }}{{ . }}{{ if $.Params.author_slug }}</a>{{ end }}
+        </p>
+      {{ end }}
+
+      <div class="book-meta">
+        {{ with .Params.language }}<span>Language: {{ . }}</span>{{ end }}
+        {{ with .Params.book_type }}<span>{{ . }}</span>{{ end }}
+        {{ with .Params.word_count }}<span>{{ . }} words</span>{{ end }}
+        {{ with .Params.pg_id }}<span>PG #{{ . }}</span>{{ end }}
+      </div>
+
+      {{ if or .Params.subjects .Params.tags }}
+        <div class="chips">
+          {{ range .Params.subjects }}<span class="chip">{{ . }}</span>{{ end }}
+          {{ range .Params.tags }}<span class="chip">{{ . }}</span>{{ end }}
+        </div>
+      {{ end }}
+
+      {{ with .Params.description }}
+        <div class="description">{{ . | safeHTML }}</div>
+      {{ end }}
+    </div>
+  </article>
+</div>
+{{ end }}

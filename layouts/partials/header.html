@@ -1,0 +1,13 @@
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="{{ .Site.BaseURL }}">
+      Impression Editions
+      <small>Free, carefully produced ebooks</small>
+    </a>
+    <nav class="site-nav">
+      {{ range .Site.Menus.main }}
+        <a href="{{ .URL }}">{{ .Name }}</a>
+      {{ end }}
+    </nav>
+  </div>
+</header>

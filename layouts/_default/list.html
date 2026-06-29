@@ -1,0 +1,26 @@
+{{ define "main" }}
+<div class="container">
+  {{/* All ebook pages; restrict to actual books (they carry an author). */}}
+  {{ $books := where (where .Site.RegularPages "Section" "ebooks") "Params.author" "!=" nil }}
+  {{ with .Params.author_slug }}
+    {{/* Author page: only this author's books. */}}
+    {{ $books = where $books "Params.author_slug" . }}
+  {{ end }}
+  {{ $books = sort $books "Date" "desc" }}
+
+  <h1>{{ .Title }}</h1>
+  {{ with .Description }}<p class="muted">{{ . }}</p>{{ end }}
+
+  {{ if $books }}
+    <div class="book-grid">
+      {{ range $books }}
+        {{ partial "book-card.html" . }}
+      {{ end }}
+    </div>
+  {{ else }}
+    <p>No ebooks yet — check back soon.</p>
+  {{ end }}
+
+  {{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+</div>
+{{ end }}

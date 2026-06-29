@@ -1,0 +1,446 @@
+"""Pytest suite for build_catalog.py.
+
+The pure helpers (slugify, OPF parsing, download mapping, front-matter
+emission, feed rendering) are exercised directly. The per-repo orchestration
+is tested by monkeypatching the module-level network functions so no real HTTP
+is performed.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+SPEC = importlib.util.spec_from_file_location("build_catalog", ROOT / "build_catalog.py")
+assert SPEC is not None and SPEC.loader is not None
+bc = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(bc)
+sys.modules["build_catalog"] = bc
+
+
+# --------------------------------------------------------------------------- #
+# Fixtures
+# --------------------------------------------------------------------------- #
+
+@pytest.fixture
+def tmp_project(tmp_path, monkeypatch):
+    """Point the module's filesystem constants at a temporary project root."""
+    monkeypatch.setattr(bc, "ROOT", tmp_path)
+    monkeypatch.setattr(bc, "CACHE_DIR", tmp_path / ".cache")
+    monkeypatch.setattr(bc, "CONTENT_EBOOKS", tmp_path / "content" / "ebooks")
+    monkeypatch.setattr(bc, "COVERS_DIR", tmp_path / "static" / "covers")
+    monkeypatch.setattr(bc, "PREVIEWS_DIR", tmp_path / "static" / "previews")
+    monkeypatch.setattr(bc, "FEEDS_DIR", tmp_path / "static" / "feeds")
+    return tmp_path
+
+
+SAMPLE_OPF = """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf"
+         prefix="se: https://standardebooks.org/vocab/1.0"
+         unique-identifier="uid" version="3.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="uid">https://impressioneditions.com/ebooks/george-webbe-dasent/burnt-njal/sir-george-webbe-dasent</dc:identifier>
+    <dc:title id="title">Burnt Njal</dc:title>
+    <dc:creator id="author">George Webbe Dasent</dc:creator>
+    <dc:language>en-GB</dc:language>
+    <dc:source>https://www.gutenberg.org/ebooks/597</dc:source>
+    <dc:date>2026-06-22T17:02:32Z</dc:date>
+    <dc:subject id="subject-1">Nj&#225;ll &#222;orgursson, approximately 930-1011</dc:subject>
+    <meta property="se:subject">Fiction</meta>
+    <meta property="se:subject">Drama</meta>
+    <dc:description id="description">A short plain description.</dc:description>
+    <meta id="long-description" property="se:long-description" refines="#description">
+      &lt;p&gt;The rich long description.&lt;/p&gt;
+    </meta>
+    <meta property="se:url.encyclopedia.wikipedia">https://en.wikipedia.org/wiki/Burnt_Njal</meta>
+    <meta property="se:word-count">268452</meta>
+  </metadata>
+</package>
+"""
+
+SAMPLE_CONFIG = {
+    "pg_id": "597",
+    "title": "Burnt Njal",
+    "author": "George Webbe Dasent",
+    "slug": "dasent-george-webbe-burnt-njal",
+    "language": "en-GB",
+    "book_type": "epic-poetry",
+    "gutendex_subjects": ["Njáll Þorgursson, approximately 930-1011"],
+}
+
+SAMPLE_REPO = {
+    "name": "burnt-njal",
+    "full_name": "Impression-Editions/burnt-njal",
+    "default_branch": "master",
+    "pushed_at": "2026-06-25T17:50:51Z",
+}
+
+SAMPLE_RELEASES = [
+    {
+        "tag_name": "v1.0",
+        "prerelease": False,
+        "draft": False,
+        "published_at": "2026-06-25T17:50:51Z",
+        "created_at": "2026-06-25T17:49:51Z",
+        "assets": [
+            {"name": "burnt-njal.epub",
+             "browser_download_url": "https://github.com/Impression-Editions/burnt-njal/releases/download/v1.0/burnt-njal.epub"},
+            {"name": "burnt-njal_advanced.epub",
+             "browser_download_url": "https://example/advanced.epub"},
+            {"name": "burnt-njal.azw3",
+             "browser_download_url": "https://example/burnt-njal.azw3"},
+        ],
+    }
+]
+
+
+# --------------------------------------------------------------------------- #
+# slugify
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize("raw,expected", [
+    ("George Webbe Dasent", "george-webbe-dasent"),
+    ("Children of the Night!", "children-of-the-night"),
+    ("  Multiple   Spaces ", "multiple-spaces"),
+    ("Æsop's Fables", "sop-s-fables"),
+    ("", ""),
+    (None, ""),
+])
+def test_slugify(raw, expected):
+    assert bc.slugify(raw) == expected
+
+
+# --------------------------------------------------------------------------- #
+# slugs_from_identifier
+# --------------------------------------------------------------------------- #
+
+def test_slugs_from_identifier_full():
+    uid = "https://impressioneditions.com/ebooks/george-webbe-dasent/burnt-njal/sir-george-webbe-dasent"
+    assert bc.slugs_from_identifier(uid) == ("george-webbe-dasent", "burnt-njal")
+
+
+def test_slugs_from_identifier_no_trailing():
+    uid = "https://impressioneditions.com/ebooks/edwin-arlington-robinson/children-of-the-night"
+    assert bc.slugs_from_identifier(uid) == ("edwin-arlington-robinson", "children-of-the-night")
+
+
+def test_slugs_from_identifier_missing():
+    assert bc.slugs_from_identifier("not-a-url") == ("", "")
+    assert bc.slugs_from_identifier("") == ("", "")
+
+
+# --------------------------------------------------------------------------- #
+# parse_opf
+# --------------------------------------------------------------------------- #
+
+def test_parse_opf_extracts_core_fields():
+    opf = bc.parse_opf(SAMPLE_OPF)
+    assert opf["title"] == "Burnt Njal"
+    assert opf["author"] == "George Webbe Dasent"
+    assert opf["language"] == "en-GB"
+    assert opf["date"] == "2026-06-22T17:02:32Z"
+    assert "https://www.gutenberg.org/ebooks/597" in opf["sources"]
+    assert "https://en.wikipedia.org/wiki/Burnt_Njal" in opf["wikipedia_urls"]
+    assert opf["word_count"] == "268452"
+    assert "Fiction" in opf["se_subjects"]
+    assert "Drama" in opf["se_subjects"]
+
+
+def test_parse_opf_long_description_decoded():
+    opf = bc.parse_opf(SAMPLE_OPF)
+    assert "<p>" in opf["long_description"]
+    assert "rich long description" in opf["long_description"]
+
+
+def test_parse_opf_handles_empty():
+    opf = bc.parse_opf("")
+    assert opf["title"] == ""
+    assert opf["subjects"] == []
+
+
+def test_description_for_prefers_long():
+    opf = bc.parse_opf(SAMPLE_OPF)
+    desc = bc.description_for(opf)
+    assert "rich long description" in desc
+
+
+def test_description_for_falls_back():
+    assert bc.description_for({"long_description": "", "description": "plain"}) == "plain"
+
+
+# --------------------------------------------------------------------------- #
+# pick_downloads
+# --------------------------------------------------------------------------- #
+
+def test_pick_downloads_all_three():
+    assets = SAMPLE_RELEASES[0]["assets"]
+    dl = bc.pick_downloads(assets)
+    assert dl["epub"].endswith("burnt-njal.epub")
+    assert dl["epub_advanced"] == "https://example/advanced.epub"
+    assert dl["azw3"] == "https://example/burnt-njal.azw3"
+    assert "kepub" not in dl
+
+
+def test_pick_downloads_advanced_not_confused_with_epub():
+    assets = [
+        {"name": "x.epub", "browser_download_url": "u/standard"},
+        {"name": "x_advanced.epub", "browser_download_url": "u/advanced"},
+    ]
+    dl = bc.pick_downloads(assets)
+    assert dl["epub"] == "u/standard"
+    assert dl["epub_advanced"] == "u/advanced"
+
+
+def test_pick_downloads_empty():
+    assert bc.pick_downloads([]) == {}
+    assert bc.pick_downloads(None) == {}
+
+
+# --------------------------------------------------------------------------- #
+# build_book_record + to_front_matter
+# --------------------------------------------------------------------------- #
+
+def test_build_book_record_uses_identifier_slugs():
+    opf = bc.parse_opf(SAMPLE_OPF)
+    book = bc.build_book_record(
+        repo=SAMPLE_REPO, config=SAMPLE_CONFIG, opf=opf,
+        downloads={"epub": "http://e", "azw3": "http://a"},
+    )
+    assert book["author_slug"] == "george-webbe-dasent"
+    assert book["slug"] == "burnt-njal"
+    assert book["title"] == "Burnt Njal"
+    assert book["author"] == "George Webbe Dasent"
+    assert book["pg_id"] == "597"
+    assert book["language"] == "en"
+    assert book["book_type"] == "epic-poetry"
+    assert "epic-poetry" in book["tags"]
+    assert "Fiction" in book["tags"]
+    assert book["cover"] == "/covers/george-webbe-dasent_burnt-njal.jpg"
+    assert book["github_repo"] == "https://github.com/Impression-Editions/burnt-njal"
+    assert book["pg_url"] == "https://www.gutenberg.org/ebooks/597"
+    assert book["downloads"]["epub"] == "http://e"
+    assert book["draft"] is False
+    assert book["weight"] > 0  # date-derived
+
+
+def test_build_book_record_falls_back_when_no_identifier():
+    config = {"title": "Some Book", "author": "Jane Doe", "pg_id": 1, "book_type": "fiction"}
+    repo = {"name": "some-book", "full_name": "Impression-Editions/some-book",
+            "default_branch": "master", "pushed_at": "2026-01-01T00:00:00Z"}
+    opf = {"identifier": "", "title": "", "author": "", "description": "",
+           "long_description": "", "subjects": [], "se_subjects": [],
+           "language": "", "sources": [], "date": "", "wikipedia_urls": [],
+           "word_count": ""}
+    book = bc.build_book_record(repo=repo, config=config, opf=opf, downloads={})
+    assert book["author_slug"] == "jane-doe"
+    assert book["slug"] == "some-book"
+
+
+def test_to_front_matter_round_trips_fields():
+    opf = bc.parse_opf(SAMPLE_OPF)
+    book = bc.build_book_record(
+        repo=SAMPLE_REPO, config=SAMPLE_CONFIG, opf=opf, downloads={"epub": "u"}
+    )
+    fm = bc.to_front_matter(book)
+    assert fm.startswith("---\n") and fm.endswith("---\n")
+    # Quoted string fields
+    assert 'title: "Burnt Njal"' in fm
+    assert 'author: "George Webbe Dasent"' in fm
+    assert 'author_slug: "george-webbe-dasent"' in fm
+    # List block
+    assert "subjects:" in fm
+    assert "tags:" in fm
+    # Nested downloads map
+    assert "downloads:" in fm
+    assert "  epub: \"u\"" in fm
+    # Boolean
+    assert "draft: false" in fm
+
+
+def test_to_front_matter_escapes_quotes():
+    fm = bc.to_front_matter({"title": 'He said "hi"', "tags": ["a"]})
+    assert 'title: "He said \\"hi\\""' in fm
+
+
+# --------------------------------------------------------------------------- #
+# Feeds
+# --------------------------------------------------------------------------- #
+
+def _book(**kw):
+    base = {
+        "title": "T", "author": "A", "author_slug": "a", "slug": "t",
+        "date": "2026-06-01T00:00:00Z", "description": "desc",
+        "cover": "/covers/a_t.jpg",
+        "downloads": {"epub": "http://e", "azw3": "http://a"},
+    }
+    base.update(kw)
+    return base
+
+
+def test_render_atom_well_formed():
+    xml = bc.render_atom([_book(title="My & Book")], "2026-06-01T00:00:00Z")
+    assert xml.startswith("<?xml")
+    assert "<feed" in xml
+    assert "<entry>" in xml
+    assert "&amp;" in xml  # escaped
+    assert "My &amp; Book" in xml
+
+
+def test_render_rss_well_formed():
+    xml = bc.render_rss([_book()], "2026-06-01T00:00:00Z")
+    assert "<rss" in xml
+    assert "<channel>" in xml
+    assert "<item>" in xml
+    assert "<pubDate>" in xml  # RFC-822 date
+
+
+def test_render_opds_has_acquisition_links():
+    xml = bc.render_opds([_book()], "2026-06-01T00:00:00Z")
+    assert "opds-spec.org/acquisition" in xml
+    assert "application/epub+zip" in xml
+    assert "application/x-mobipocket-ebook" in xml
+
+
+def test_write_feeds_creates_files(tmp_project):
+    bc.write_feeds([_book(), _book(title="Second", slug="s", author_slug="a")])
+    for name in ("atom.xml", "rss.xml", "opds.xml"):
+        assert (tmp_project / "static" / "feeds" / name).exists()
+
+
+# --------------------------------------------------------------------------- #
+# Index / author pages
+# --------------------------------------------------------------------------- #
+
+def test_write_indexes_creates_top_and_author_pages(tmp_project):
+    books = [
+        _book(author="Jane Doe", author_slug="jane-doe", slug="book-one"),
+        _book(author="Jane Doe", author_slug="jane-doe", slug="book-two"),
+    ]
+    bc.write_indexes(books)
+    assert (tmp_project / "content" / "ebooks" / "_index.md").exists()
+    author_index = tmp_project / "content" / "ebooks" / "jane-doe" / "_index.md"
+    assert author_index.exists()
+    assert "Jane Doe" in author_index.read_text()
+
+
+# --------------------------------------------------------------------------- #
+# process_repo orchestration (network monkeypatched)
+# --------------------------------------------------------------------------- #
+
+def _patch_network(monkeypatch, *, config=SAMPLE_CONFIG, opf=SAMPLE_OPF,
+                   releases=SAMPLE_RELEASES, cover=b"JPEG",
+                   preview=None):
+    """Replace network fetchers with deterministic in-memory fakes.
+
+    raw_get_text returns the raw *string* body (JSON for config.json), matching
+    the real implementation so json.loads()/cache writes behave identically.
+    """
+    config_text = json.dumps(config) if config is not None else None
+    monkeypatch.setattr(bc, "github_api_get", lambda path: releases)
+    monkeypatch.setattr(bc, "raw_get_text", lambda url: (
+        config_text if url.endswith("config.json")
+        else opf if url.endswith("content.opf")
+        else preview
+    ))
+    monkeypatch.setattr(bc, "raw_get_bytes", lambda url: cover)
+
+
+def test_process_repo_success(tmp_project, monkeypatch):
+    _patch_network(monkeypatch)
+    stats = bc.Stats()
+    state: dict = {}
+    book = bc.process_repo(SAMPLE_REPO, stats=stats, force=False, state=state)
+
+    assert book is not None
+    assert stats.processed == 1
+    assert stats.errors == 0
+    # Markdown written under ebooks/{author}/{title}.md
+    md = tmp_project / "content" / "ebooks" / "george-webbe-dasent" / "burnt-njal.md"
+    assert md.exists()
+    body = md.read_text()
+    assert 'title: "Burnt Njal"' in body
+    assert "downloads:" in body
+    # Cover image written
+    cover = tmp_project / "static" / "covers" / "george-webbe-dasent_burnt-njal.jpg"
+    assert cover.exists()
+    assert cover.read_bytes() == b"JPEG"
+    # State recorded
+    assert state["burnt-njal"]["author_slug"] == "george-webbe-dasent"
+
+
+def test_process_repo_skips_without_config(tmp_project, monkeypatch):
+    _patch_network(monkeypatch, config=None)
+    stats = bc.Stats()
+    book = bc.process_repo(SAMPLE_REPO, stats=stats, force=False, state={})
+    assert book is None
+    assert stats.errors == 1
+    assert stats.processed == 0
+    assert "burnt-njal" in stats.error_repos
+
+
+def test_process_repo_skips_without_opf(tmp_project, monkeypatch):
+    _patch_network(monkeypatch, opf=None)
+    stats = bc.Stats()
+    book = bc.process_repo(SAMPLE_REPO, stats=stats, force=False, state={})
+    assert book is None
+    assert stats.errors == 1
+
+
+def test_process_repo_warns_but_succeeds_without_releases(tmp_project, monkeypatch):
+    _patch_network(monkeypatch, releases=[])
+    stats = bc.Stats()
+    book = bc.process_repo(SAMPLE_REPO, stats=stats, force=False, state={})
+    assert book is not None          # still produced, just no downloads
+    assert stats.processed == 1
+    assert book["downloads"] == {}
+
+
+def test_process_repo_writes_preview_when_present(tmp_project, monkeypatch):
+    _patch_network(monkeypatch, preview="<html>preview</html>")
+    stats = bc.Stats()
+    bc.process_repo(SAMPLE_REPO, stats=stats, force=False, state={})
+    preview = tmp_project / "static" / "previews" / "george-webbe-dasent_burnt-njal.html"
+    assert preview.exists()
+    assert "preview" in preview.read_text()
+
+
+def test_process_repo_uses_cache(tmp_project, monkeypatch):
+    # Seed a fresh cache so no network is required on the second pass.
+    _patch_network(monkeypatch)
+    state1: dict = {}
+    bc.process_repo(SAMPLE_REPO, stats=bc.Stats(), force=False, state=state1)
+
+    # Now make the network raise — a cache hit must avoid calling it.
+    def boom(url):  # noqa: ANN001
+        raise AssertionError("network should not be hit when cache is fresh")
+    monkeypatch.setattr(bc, "raw_get_text", boom)
+    monkeypatch.setattr(bc, "raw_get_bytes", boom)
+    monkeypatch.setattr(bc, "github_api_get", boom)
+
+    stats = bc.Stats()
+    book = bc.process_repo(
+        SAMPLE_REPO, stats=stats, force=False, state=state1
+    )
+    assert book is not None
+    assert stats.cached == 1
+
+
+# --------------------------------------------------------------------------- #
+# Date helpers
+# --------------------------------------------------------------------------- #
+
+def test_normalise_date_passthrough_iso():
+    assert bc.normalise_date("2026-06-25T17:50:51Z") == "2026-06-25T17:50:51Z"
+
+
+def test_normalise_date_date_only():
+    assert bc.normalise_date("2026-06-25") == "2026-06-25T00:00:00Z"
+
+
+def test_normalise_date_empty():
+    assert bc.normalise_date("") == ""

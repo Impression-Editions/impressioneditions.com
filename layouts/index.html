@@ -1,0 +1,30 @@
+{{ define "main" }}
+<div class="container">
+
+  <section class="hero">
+    <h1>Impression Editions</h1>
+    <p>
+      Free, carefully produced ebooks — beautifully typeset, accessible, and built to last.
+      Each volume is lovingly edited and released under a free culture license.
+    </p>
+    <div class="cta-row">
+      <a class="btn primary" href="/ebooks/">Browse the catalog</a>
+      <a class="btn" href="/about/">About Impression Editions</a>
+    </div>
+  </section>
+
+  {{ $books := sort (where (where .Site.RegularPages "Section" "ebooks") "Params.author" "!=" nil) "Date" "desc" }}
+  {{ if $books }}
+    <h2 class="section-title">
+      Latest releases
+      <a href="/ebooks/">View all →</a>
+    </h2>
+    <div class="book-grid">
+      {{ range first 6 $books }}
+        {{ partial "book-card.html" . }}
+      {{ end }}
+    </div>
+  {{ end }}
+
+</div>
+{{ end }}

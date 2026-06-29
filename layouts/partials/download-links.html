@@ -1,0 +1,22 @@
+{{/* Download buttons + related links. Expects a book page as context. */}}
+<section class="downloads">
+  <h3>Download</h3>
+  {{ $dl := .Params.downloads }}
+  {{ if or $dl.epub $dl.epub_advanced $dl.azw3 $dl.kepub }}
+    <div class="download-list">
+      {{ with $dl.epub }}<a class="btn primary" href="{{ . }}">EPUB</a>{{ end }}
+      {{ with $dl.epub_advanced }}<a class="btn" href="{{ . }}">Advanced EPUB</a>{{ end }}
+      {{ with $dl.azw3 }}<a class="btn" href="{{ . }}">Kindle (AZW3)</a>{{ end }}
+      {{ with $dl.kepub }}<a class="btn" href="{{ . }}">Kobo (KEPUB)</a>{{ end }}
+    </div>
+  {{ else }}
+    <p class="muted">No downloads published yet.</p>
+  {{ end }}
+
+  <ul class="link-list">
+    {{ with .Params.preview }}<li><a href="{{ . }}">Read online</a></li>{{ end }}
+    {{ with .Params.github_repo }}<li>Source: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
+    {{ with .Params.pg_url }}<li>Project Gutenberg: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
+    {{ with .Params.wikipedia_url }}<li>Wikipedia: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
+  </ul>
+</section>

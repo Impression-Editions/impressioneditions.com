@@ -1,0 +1,16 @@
+{{/* Expects a page (book) as context. */}}
+<article class="book-card">
+  <a class="cover" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+    {{ with .Params.cover }}
+      <img src="{{ . }}" alt="Cover of {{ $.Title }}" loading="lazy">
+    {{ else }}
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23e2d9cc'/%3E%3C/svg%3E" alt="">
+    {{ end }}
+  </a>
+  <h3 class="title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+  {{ with .Params.author }}
+    <p class="author">
+      {{ with $.Params.author_slug }}<a href="/ebooks/{{ . }}/">{{ end }}{{ . }}{{ if $.Params.author_slug }}</a>{{ end }}
+    </p>
+  {{ end }}
+</article>
