@@ -14,6 +14,43 @@
 }
 html { height: 100%; }
 body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+
+#drop-target {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2em;
+    box-sizing: border-box;
+}
+#drop-target.dragover { background: rgba(0,0,0,0.05); }
+.drop-inner { max-width: 28em; }
+.drop-inner h2 { font-weight: 600; margin-bottom: 0.5em; }
+.drop-inner p { color: #888; line-height: 1.5; margin: 0.5em 0; }
+#file-button {
+    font-size: 1.1em;
+    padding: 0.6em 1.5em;
+    margin: 1em 0;
+    cursor: pointer;
+}
+#file-input { display: none; }
+.download-link {
+    display: inline-block;
+    margin-top: 1em;
+    padding: 0.5em 1em;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 4px;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.9em;
+}
+@supports (color-scheme: light dark) {
+    @media (prefers-color-scheme: dark) {
+        .download-link { border-color: rgba(255,255,255,0.2); }
+    }
+}
+
 #top-bar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 101;
     display: none; align-items: center; gap: 0.5em; padding: 0.5em;
@@ -43,7 +80,6 @@ foliate-view { display: block; width: 100%; height: 100%; border: 0; }
     -webkit-appearance: none; width: 16px; height: 16px;
     border-radius: 50%; background: #666; cursor: pointer;
 }
-.loading { color: #888; font-size: 1.2em; text-align: center; padding-top: 40vh; }
 #title-bar { margin-left: auto; margin-right: 1em; font-size: 0.85em; color: #888; }
 </style>
 </head>
@@ -55,30 +91,41 @@ foliate-view { display: block; width: 100%; height: 100%; border: 0; }
     <button id="next-button" aria-label="Next">→</button>
     <span id="percent-label" style="font-size:0.8em;color:#888;min-width:3em;text-align:right">0%</span>
     <span id="title-bar"></span>
+    <button id="close-button" aria-label="Open another book">✕</button>
 </div>
 <div id="side-bar"><div id="toc"></div></div>
-<div class="loading" id="loading">Loading book…</div>
+
+<div id="drop-target">
+    <div class="drop-inner">
+        <h2>Read in Browser</h2>
+        <p id="drop-instructions">Drop an EPUB file here, or choose one from your device.</p>
+        <input type="file" id="file-input" accept=".epub,application/epub+zip">
+        <button id="file-button">Choose file</button>
+        <div id="download-prompt" style="display:none">
+            <p>First, download the EPUB:</p>
+            <a class="download-link" id="book-download" href="#">⬇ Download EPUB</a>
+            <p style="font-size:0.85em;margin-top:0.8em">Then drag the downloaded file onto this page,<br>or use "Choose file" above.</p>
+        </div>
+        <p style="margin-top:1.5em"><a href="/ebooks/" style="color:inherit;font-size:0.85em">← Back to catalog</a></p>
+    </div>
+</div>
+
 <script type="module">
 import './foliate/view.js'
 
 const params = new URLSearchParams(location.search)
-let epubUrl = params.get('url') || ''
-const title = params.get('title') || 'Untitled'
+const epubUrl = params.get('url')
+const title = params.get('title') || ''
 
-// Route GitHub release URLs through Netlify Edge Function for CORS
-if (epubUrl.startsWith('https://github.com/')) {
-    epubUrl = '/proxy-epub?url=' + encodeURIComponent(epubUrl)
-}
-
-document.title = title + ' — Read Online — Impression Editions'
-document.getElementById('title-bar').textContent = title
-
-const loading = document.getElementById('loading')
+const dropTarget = document.getElementById('drop-target')
+const fileInput = document.getElementById('file-input')
+const fileButton = document.getElementById('file-button')
 const topBar = document.getElementById('top-bar')
 const sideBar = document.getElementById('side-bar')
 const tocButton = document.getElementById('toc-button')
 const prevButton = document.getElementById('prev-button')
 const nextButton = document.getElementById('next-button')
+const closeButton = document.getElementById('close-button')
 const slider = document.getElementById('progress-slider')
 const percentLabel = document.getElementById('percent-label')
 const tocContainer = document.getElementById('toc')
@@ -86,19 +133,60 @@ const tocContainer = document.getElementById('toc')
 const view = document.createElement('foliate-view')
 document.body.append(view)
 
-const open = async url => {
+const openFile = async file => {
     try {
-        const res = await fetch(url)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const blob = await res.blob()
-        await view.open(blob)
-        loading.style.display = 'none'
+        await view.open(file)
+        dropTarget.style.display = 'none'
         topBar.style.display = 'flex'
+        if (file.name) {
+            const niceTitle = file.name.replace(/\.epub$/i, '')
+            document.title = niceTitle + ' — Read Online — Impression Editions'
+            document.getElementById('title-bar').textContent = niceTitle
+        }
     } catch (e) {
-        loading.innerHTML = `<p style="color:#c00">Failed to load book.</p><p style="font-size:0.85em">${e.message}</p>`
+        alert('Could not open file: ' + e.message)
     }
 }
 
+// File picker
+fileButton.onclick = () => fileInput.click()
+fileInput.onchange = () => {
+    if (fileInput.files[0]) openFile(fileInput.files[0])
+}
+
+// If a book URL was passed, show download prompt
+if (epubUrl) {
+    const downloadPrompt = document.getElementById('download-prompt')
+    const downloadLink = document.getElementById('book-download')
+    const instructions = document.getElementById('drop-instructions')
+    downloadLink.href = epubUrl
+    downloadLink.setAttribute('download', '')
+    downloadPrompt.style.display = 'block'
+    instructions.textContent = 'Then open it here:'
+    if (title) {
+        document.querySelector('.drop-inner h2').textContent = title
+    }
+}
+
+// Drag and drop
+;['dragenter', 'dragover'].forEach(evt => {
+    dropTarget.addEventListener(evt, e => {
+        e.preventDefault()
+        dropTarget.classList.add('dragover')
+    })
+})
+;['dragleave', 'drop'].forEach(evt => {
+    dropTarget.addEventListener(evt, e => {
+        e.preventDefault()
+        dropTarget.classList.remove('dragover')
+    })
+})
+dropTarget.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0]
+    if (file) openFile(file)
+})
+
+// Navigation events
 view.addEventListener('relocate', e => {
     const { fraction } = e.detail
     slider.value = fraction * 100
@@ -113,6 +201,10 @@ tocButton.onclick = () => {
     sideBar.hasAttribute('data-open')
         ? sideBar.removeAttribute('data-open')
         : sideBar.setAttribute('data-open', '')
+}
+
+closeButton.onclick = () => {
+    location.reload()
 }
 
 document.addEventListener('click', e => {
@@ -151,10 +243,13 @@ view.addEventListener('ready', e => {
     }
     buildTOC(book.toc, tocContainer)
     tocButton.style.display = 'block'
-})
 
-if (epubUrl) open(epubUrl).catch(e => console.error(e))
-else loading.textContent = 'No book URL specified.'
+    // Update title from book metadata
+    if (book.metadata?.title) {
+        document.title = book.metadata.title + ' — Read Online — Impression Editions'
+        document.getElementById('title-bar').textContent = book.metadata.title
+    }
+})
 </script>
 </body>
 </html>
