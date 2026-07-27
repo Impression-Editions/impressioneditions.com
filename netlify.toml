@@ -5,3 +5,7 @@
 [build.environment]
   HUGO_VERSION = "0.159.0"
   PYTHON_VERSION = "3.12"
+
+[[edge_functions]]
+  function = "proxy-epub"
+  path = "/proxy-epub"

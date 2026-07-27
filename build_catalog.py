@@ -824,20 +824,9 @@ def process_repo(
         else:
             log(f"  {repo_name}: reader skipped — no EPUB in release.")
 
-        # --- jsDelivr CDN URL for reader (no hosting required) ------------
-        # jsDelivr serves GitHub release assets with CORS headers, unlike
-        # GitHub's own release download URLs which redirect to Azure Blob
-        # Storage without CORS. This lets foliate-js fetch EPUBs client-side.
-        if epub_url and latest:
-            # jsDelivr serves GitHub repo files with CORS headers.
-            # EPUBs are committed to each book repo for this purpose.
-            # URL pattern: cdn.jsdelivr.net/gh/{org}/{repo}@master/{filename}
-            if epub_url.startswith("https://github.com/"):
-                parts = epub_url.split("/")
-                if len(parts) >= 9:
-                    org_repo = f"{parts[3]}/{parts[4]}"
-                    filename = parts[8]
-                    book["epub_local"] = f"https://cdn.jsdelivr.net/gh/{org_repo}@master/{filename}"
+        # Note: the foliate-js reader proxies GitHub release URLs through
+        # a Netlify Edge Function (/proxy-epub) to handle CORS. No jsDelivr,
+        # no repo storage, no build-time downloads.
 
         # --- write outputs -----------------------------------------------
         write_book(book, cover_bytes, preview_text)
