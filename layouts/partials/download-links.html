@@ -15,12 +15,11 @@
 
   {{ if .Params.downloads.epub }}
     <div class="download-list" style="margin-top:1.5em">
-      <a class="btn primary" href="/read/?url={{ urlquery .Params.downloads.epub }}&title={{ urlquery .Params.title }}" target="_blank" rel="noopener">Read in browser</a>
+      <a class="btn primary" href="/read/?url={{ urlquery .Params.downloads.epub }}&title={{ urlquery .Params.title }}" target="_blank" rel="noopener">Read in Browser (requires EPUB download first)</a>
     </div>
   {{ end }}
 
   <ul class="link-list">
-    {{ with .Params.preview }}<li><a href="{{ . }}">HTML preview</a></li>{{ end }}
     {{ with .Params.github_repo }}<li>Source: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.pg_url }}<li>Project Gutenberg: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.wikipedia_url }}<li>Wikipedia: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
