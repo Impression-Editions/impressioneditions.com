@@ -715,9 +715,13 @@ def process_repo(
             f"{RAW_BASE}/{repo_full}/{branch}/config.json",
         )
         if not config_text:
-            err(f"{repo_name}: missing config.json — skipping.")
-            stats.errors += 1
-            stats.error_repos.append(repo_name)
+            # Non-book repos (like the website itself) don't have config.json — skip silently
+            if repo_name in ('impressioneditions.com',):
+                print(f"  {repo_name}: not a book repo — skipping.")
+            else:
+                err(f"{repo_name}: missing config.json — skipping.")
+                stats.errors += 1
+                stats.error_repos.append(repo_name)
             return None
         config = json.loads(config_text)
 
