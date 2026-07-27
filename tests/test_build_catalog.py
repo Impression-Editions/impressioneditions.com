@@ -149,7 +149,7 @@ def test_parse_opf_extracts_core_fields():
     assert opf["date"] == "2026-06-22T17:02:32Z"
     assert "https://www.gutenberg.org/ebooks/597" in opf["sources"]
     assert "https://en.wikipedia.org/wiki/Burnt_Njal" in opf["wikipedia_urls"]
-    assert opf["word_count"] == "268452"
+    assert opf["word_count"] == "268,452"
     assert "Fiction" in opf["se_subjects"]
     assert "Drama" in opf["se_subjects"]
 

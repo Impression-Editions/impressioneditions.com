@@ -328,7 +328,8 @@ def parse_opf(opf_text: str) -> dict[str, Any]:
         opf_text, re.IGNORECASE,
     )
     if wc_match:
-        out["word_count"] = wc_match.group(1).strip()
+        wc_val = wc_match.group(1).strip().replace(",", "")
+        out["word_count"] = f"{int(wc_val):,}"
 
     return out
 
@@ -822,6 +823,17 @@ def process_repo(
                 warn(f"{repo_name}: reader skipped — EPUB download failed.")
         else:
             log(f"  {repo_name}: reader skipped — no EPUB in release.")
+
+        # --- download EPUB for same-origin reader (foliate-js) -------------
+        if epub_url and epub_bytes:
+            # Serve EPUBs same-origin to avoid CORS issues with GitHub redirects
+            epub_dir = ROOT / "static" / "epubs"
+            epub_dir.mkdir(parents=True, exist_ok=True)
+            epub_filename = f"{book['author_slug']}_{book['slug']}.epub"
+            epub_path = epub_dir / epub_filename
+            epub_path.write_bytes(epub_bytes)
+            # Update download URL to same-origin path for the reader
+            book["epub_local"] = f"/epubs/{epub_filename}"
 
         # --- write outputs -----------------------------------------------
         write_book(book, cover_bytes, preview_text)

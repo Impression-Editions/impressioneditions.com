@@ -13,10 +13,9 @@
     <p class="muted">No downloads published yet.</p>
   {{ end }}
 
-  {{ if .Params.downloads.epub }}
-    {{ $readUrl := printf "/read/?url=%s&title=%s" (urlquery .Params.downloads.epub) (urlquery .Params.title) }}
+  {{ if .Params.epub_local }}
     <div class="download-list" style="margin-top:1.5em">
-      <a class="btn primary" href="{{ $readUrl }}">Read online</a>
+      <a class="btn primary" href="/read/?url={{ .Params.epub_local }}&title={{ urlquery .Params.title }}" target="_blank" rel="noopener">Read online</a>
     </div>
   {{ end }}
 
