@@ -755,13 +755,30 @@ def process_repo(
 
         # --- cover image --------------------------------------------------
         cover_bytes = None
-        for cover_path in ("images/cover-override/cover.jpg", "images/cover.jpg"):
-            cover_bytes = cached_or_fetch_bytes(
-                "cover.jpg",
+        for cover_path in (
+            "images/cover-override/cover.jpg",
+            "images/cover-override/cover.png",
+            "images/cover.jpg",
+            "images/cover.png",
+        ):
+            cache_name = cover_path.replace("/", "_")
+            raw = cached_or_fetch_bytes(
+                cache_name,
                 f"{RAW_BASE}/{repo_full}/{branch}/{cover_path}",
             )
-            if cover_bytes:
-                break
+            if raw and len(raw) > 1000:
+                # Validate it's actually image data (not an HTML error page)
+                if raw[:4] in (b'\xff\xd8\xff\xe0', b'\xff\xd8\xff\xe1') or raw[:8] == b'\x89PNG\r\n\x1a\n':
+                    cover_bytes = raw
+                    break
+                else:
+                    # Not an image — probably HTML. Clear cache and try next path.
+                    marker = repo_cache / f".{cache_name}.missing"
+                    cache_file = repo_cache / cache_name
+                    if cache_file.exists():
+                        cache_file.unlink()
+                    marker.touch()
+                    continue
         if not cover_bytes:
             warn(f"{repo_name}: no cover image found.")
 
