@@ -22,6 +22,10 @@ wrapStandAloneImageWithinParagraph = false
     url = "/ebooks/"
     weight = 1
   [[menu.main]]
+    name = "Why"
+    url = "/why/"
+    weight = 2
+  [[menu.main]]
     name = "About"
     url = "/about/"
-    weight = 2
+    weight = 3
