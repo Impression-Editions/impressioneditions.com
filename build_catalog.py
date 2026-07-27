@@ -824,16 +824,20 @@ def process_repo(
         else:
             log(f"  {repo_name}: reader skipped — no EPUB in release.")
 
-        # --- download EPUB for same-origin reader (foliate-js) -------------
-        if epub_url and epub_bytes:
-            # Serve EPUBs same-origin to avoid CORS issues with GitHub redirects
-            epub_dir = ROOT / "static" / "epubs"
-            epub_dir.mkdir(parents=True, exist_ok=True)
-            epub_filename = f"{book['author_slug']}_{book['slug']}.epub"
-            epub_path = epub_dir / epub_filename
-            epub_path.write_bytes(epub_bytes)
-            # Update download URL to same-origin path for the reader
-            book["epub_local"] = f"/epubs/{epub_filename}"
+        # --- jsDelivr CDN URL for reader (no hosting required) ------------
+        # jsDelivr serves GitHub release assets with CORS headers, unlike
+        # GitHub's own release download URLs which redirect to Azure Blob
+        # Storage without CORS. This lets foliate-js fetch EPUBs client-side.
+        if epub_url and latest:
+            # jsDelivr serves GitHub repo files with CORS headers.
+            # EPUBs are committed to each book repo for this purpose.
+            # URL pattern: cdn.jsdelivr.net/gh/{org}/{repo}@master/{filename}
+            if epub_url.startswith("https://github.com/"):
+                parts = epub_url.split("/")
+                if len(parts) >= 9:
+                    org_repo = f"{parts[3]}/{parts[4]}"
+                    filename = parts[8]
+                    book["epub_local"] = f"https://cdn.jsdelivr.net/gh/{org_repo}@master/{filename}"
 
         # --- write outputs -----------------------------------------------
         write_book(book, cover_bytes, preview_text)

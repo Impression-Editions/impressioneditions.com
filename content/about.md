@@ -21,7 +21,7 @@ Every volume begins with a public-domain source text — typically from
    appropriate, with illustrations and scholarly apparatus restored where they
    add value.  We have designed comprehensive tooling to compare existing transcriptions
    to scans in order to ensure that the resulting ebook is as faithful to the original
-   as possible...something you might not find elsewhere.
+   as possible.
 3. **Typography.** We craft semantic, accessible EPUB and Kindle editions with
    custom stylesheets, proper verse and table handling, and linkable endnotes.
 4. **Production.** Each release is built reproducibly from an open GitHub
@@ -29,8 +29,6 @@ Every volume begins with a public-domain source text — typically from
 
 ## Our standards
 
-- **Accessible by default.** Our editions conform to EPUB Accessibility 1.1
-  (WCAG 2.2 Level AA), with semantic structure, alt text, and reading order.
 - **Open source.** The complete source for every book lives on
   [GitHub](https://github.com/Impression-Editions), so anyone can inspect,
   learn from, or build upon our work.

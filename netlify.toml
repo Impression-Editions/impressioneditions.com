@@ -5,8 +5,3 @@
 [build.environment]
   HUGO_VERSION = "0.159.0"
   PYTHON_VERSION = "3.12"
-
-[[headers]]
-  for = "/gh-download/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
