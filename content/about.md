@@ -9,18 +9,19 @@ prepared digital editions of literary works in the spirit of
 [Standard Ebooks](https://standardebooks.org/).
 
 We believe a great ebook is more than a correct transcription of the text. It
-is a *designed* object: thoughtfully typeset, accessible to readers of all
-abilities, and built to outlast any single reading device.
+is a *designed* object: thoughtfully typeset, and built to outlast any single reading device.
 
 ## Our process
 
 Every volume begins with a public-domain source text — typically from
-[Project Gutenberg](https://www.gutenberg.org/) — and is then reworked by hand:
+[Project Gutenberg](https://www.gutenberg.org/) — and is then enhanced:
 
 1. **Sourcing.** We start from a reliable transcription and track its provenance.
 2. **Editing.** The text is proofread, corrected, and lightly modernised where
    appropriate, with illustrations and scholarly apparatus restored where they
-   add value.
+   add value.  We have designed comprehensive tooling to compare existing transcriptions
+   to scans in order to ensure that the resulting ebook is as faithful to the original
+   as possible...something you might not find elsewhere.
 3. **Typography.** We craft semantic, accessible EPUB and Kindle editions with
    custom stylesheets, proper verse and table handling, and linkable endnotes.
 4. **Production.** Each release is built reproducibly from an open GitHub
