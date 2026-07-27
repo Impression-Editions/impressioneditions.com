@@ -25,11 +25,13 @@ runs, repos whose ``pushed_at`` has not changed reuse cached files. Pass
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
 import sys
 import time
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -55,6 +57,7 @@ CONTENT_EBOOKS = ROOT / "content" / "ebooks"
 COVERS_DIR = ROOT / "static" / "covers"
 PREVIEWS_DIR = ROOT / "static" / "previews"
 FEEDS_DIR = ROOT / "static" / "feeds"
+READER_DIR = ROOT / "static" / "reader"
 SITE_BASE_URL = "https://impressioneditions.com/"
 
 # Exit non-zero when more than this fraction of repos fail (systemic failure).
@@ -798,6 +801,28 @@ def process_repo(
             repo=repo, config=config, opf=opf, downloads=downloads
         )
 
+        # --- online reader (optional, from EPUB release asset) ------------
+        epub_url = downloads.get("epub")
+        if epub_url:
+            epub_bytes = cached_or_fetch_bytes("reader-epub.epub", epub_url)
+            if epub_bytes:
+                reader_out = READER_DIR / f"{book['author_slug']}_{book['slug']}"
+                try:
+                    if generate_reader(epub_bytes, reader_out, book):
+                        book["has_reader"] = True
+                        log(
+                            f"  📖 {repo_name}: reader → "
+                            f"/reader/{book['author_slug']}_{book['slug']}/"
+                        )
+                    else:
+                        warn(f"{repo_name}: reader generation produced no output.")
+                except (zipfile.BadZipFile, OSError, KeyError) as exc:
+                    warn(f"{repo_name}: reader skipped — {exc}")
+            else:
+                warn(f"{repo_name}: reader skipped — EPUB download failed.")
+        else:
+            log(f"  {repo_name}: reader skipped — no EPUB in release.")
+
         # --- write outputs -----------------------------------------------
         write_book(book, cover_bytes, preview_text)
 
@@ -858,6 +883,485 @@ def write_book(
         (PREVIEWS_DIR / f"{book['author_slug']}_{book['slug']}.html").write_text(
             preview_text, encoding="utf-8"
         )
+
+
+# --------------------------------------------------------------------------- #
+# Online reader generation (Phase 2)
+# --------------------------------------------------------------------------- #
+#
+# ``generate_reader`` extracts the contents of a compatible EPUB and writes a
+# faithful in-browser reading experience to ``static/reader/{slug}/``. Each
+# chapter becomes a standalone ``.xhtml`` page (served as
+# ``application/xhtml+xml`` by Netlify) wrapped in minimal reader chrome with
+# prev/next/contents/single-page navigation. The EPUB's own CSS, images, and
+# ``epub:type`` attributes are preserved verbatim so typography renders
+# identically to a dedicated ereader.
+
+READER_CSS = """\
+/* Reader chrome — wraps EPUB content without overriding book CSS */
+
+.reader-nav {
+    position: sticky;
+    top: 0;
+    background: var(--reader-nav-bg, #f8f8f8);
+    border-bottom: 1px solid #ddd;
+    padding: 0.5em 1em;
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+    font-family: sans-serif;
+    font-size: 0.85em;
+    z-index: 100;
+}
+
+.reader-nav.bottom {
+    top: auto;
+    bottom: 0;
+    border-bottom: none;
+    border-top: 1px solid #ddd;
+}
+
+.reader-nav a {
+    color: #555;
+    text-decoration: none;
+}
+
+.reader-nav a:hover {
+    text-decoration: underline;
+}
+
+.reader-nav .muted {
+    color: #bbb;
+}
+
+.reader-content {
+    max-width: 40em;
+    margin: 0 auto;
+    padding: 2em 1.5em;
+}
+
+.reader-toc ol {
+    list-style: decimal;
+    padding-left: 1.5em;
+}
+
+.reader-toc li {
+    margin: 0.3em 0;
+}
+
+.reader-toc a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.reader-toc a:hover {
+    text-decoration: underline;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --reader-nav-bg: #1a1a1a;
+    }
+    .reader-nav {
+        border-bottom-color: #333;
+    }
+    .reader-nav a {
+        color: #aaa;
+    }
+    .reader-nav .muted {
+        color: #555;
+    }
+}
+"""
+
+# Image extensions copied from the EPUB into ``images/``.
+_IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".svg", ".gif", ".webp")
+
+
+def _parse_epub_opf(opf_text: str) -> tuple[dict[str, dict[str, str]], list[str]]:
+    """Return ``(manifest, spine)`` from an OPF document.
+
+    ``manifest`` maps ``id`` → ``{"href", "media_type"}``. ``spine`` is the
+    ordered list of ``idref`` values from ``<itemref>`` elements. Attribute
+    order inside ``<item>`` tags is not guaranteed, so each tag is parsed
+    independently.
+    """
+    manifest: dict[str, dict[str, str]] = {}
+    for tag in re.findall(r"<item\b[^>]*/?>", opf_text, re.IGNORECASE):
+        id_m = re.search(r'\bid="([^"]+)"', tag)
+        href_m = re.search(r'\bhref="([^"]+)"', tag)
+        mt_m = re.search(r'\bmedia-type="([^"]+)"', tag)
+        if id_m and href_m:
+            manifest[id_m.group(1)] = {
+                "href": href_m.group(1),
+                "media_type": (mt_m.group(1) if mt_m else ""),
+            }
+    spine: list[str] = []
+    for tag in re.findall(r"<itemref\b[^>]*/?>", opf_text, re.IGNORECASE):
+        idref_m = re.search(r'\bidref="([^"]+)"', tag)
+        if idref_m:
+            spine.append(idref_m.group(1))
+    return manifest, spine
+
+
+def _extract_body(xhtml_text: str) -> str:
+    """Return the inner markup of ``<body>...</body>``, or the input verbatim."""
+    m = re.search(
+        r"<body\b[^>]*>(.*?)</body>", xhtml_text, re.DOTALL | re.IGNORECASE
+    )
+    if not m:
+        return xhtml_text.strip()
+    return m.group(1).strip()
+
+
+def _extract_chapter_title(xhtml_text: str, fallback: str) -> str:
+    """Best-effort chapter title from ``<title>``, ``<h1>``, or ``<h2>``."""
+    m = re.search(r"<title[^>]*>(.*?)</title>", xhtml_text, re.IGNORECASE | re.DOTALL)
+    if m and m.group(1).strip():
+        title = _strip_tags(m.group(1)).strip()
+        if title:
+            return title
+    for tag in ("h1", "h2"):
+        m = re.search(
+            rf"<{tag}\b[^>]*>(.*?)</{tag}>", xhtml_text, re.IGNORECASE | re.DOTALL
+        )
+        if m and m.group(1).strip():
+            title = _strip_tags(m.group(1)).strip()
+            if title:
+                return title
+    return fallback
+
+
+def _reader_nav_html(prev_link: str, next_link: str) -> str:
+    """Render the reader chrome nav bar (used at top and bottom of pages)."""
+    return (
+        '<nav class="reader-nav">\n'
+        f"        {prev_link}\n"
+        '        <a href="index.xhtml">Contents</a>\n'
+        f"        {next_link}\n"
+        '        <a href="single-page.xhtml">Single page</a>\n'
+        "    </nav>"
+    )
+
+
+def _render_chapter_page(
+    *, title: str, book_title: str, body: str, prev_link: str, next_link: str
+) -> str:
+    """Render a single per-chapter XHTML page."""
+    nav = _reader_nav_html(prev_link, next_link)
+    page_title = f"{title} — {book_title}" if book_title else title
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<!DOCTYPE html>\n"
+        '<html xmlns="http://www.w3.org/1999/xhtml"\n'
+        '      xmlns:epub="http://www.idpf.org/2007/ops"\n'
+        '      epub:prefix="z3998: http://www.daisy.org/z3998/2012/vocab/structure/,'
+        ' se: https://standardebooks.org/vocab/1.0"\n'
+        '      lang="en-US" xml:lang="en-US">\n'
+        "<head>\n"
+        '    <meta charset="utf-8"/>\n'
+        '    <meta name="viewport" content="width=device-width, initial-scale=1"/>\n'
+        f"    <title>{_xml_escape(page_title)}</title>\n"
+        '    <link rel="stylesheet" href="core.css"/>\n'
+        '    <link rel="stylesheet" href="local.css"/>\n'
+        '    <link rel="stylesheet" href="se.css"/>\n'
+        '    <link rel="stylesheet" href="reader.css"/>\n'
+        "</head>\n"
+        "<body>\n"
+        f"    {nav}\n"
+        '    <main class="reader-content">\n'
+        f"{body}\n"
+        "    </main>\n"
+        f"    {nav}\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+def _render_index_page(
+    *, book_metadata: dict[str, Any], chapters: list[tuple[str, str, str]]
+) -> str:
+    """Render ``index.xhtml`` — chapter list / table of contents."""
+    book_title = book_metadata.get("title", "")
+    back_url = ""
+    author_slug = book_metadata.get("author_slug", "")
+    title_slug = book_metadata.get("slug", "")
+    if author_slug and title_slug:
+        back_url = f"/ebooks/{author_slug}/{title_slug}/"
+
+    nav = _reader_nav_html(
+        prev_link='<span class="muted">← Previous</span>',
+        next_link='<span class="muted">Next →</span>',
+    )
+    items = "\n".join(
+        f'        <li><a href="{filename}">{_xml_escape(title)}</a></li>'
+        for filename, title, _ in chapters
+    )
+    back_link = (
+        f'\n    <p><a href="{back_url}">← Back to {book_title}</a></p>'
+        if back_url
+        else ""
+    )
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<!DOCTYPE html>\n"
+        '<html xmlns="http://www.w3.org/1999/xhtml"\n'
+        '      xmlns:epub="http://www.idpf.org/2007/ops"\n'
+        '      epub:prefix="z3998: http://www.daisy.org/z3998/2012/vocab/structure/,'
+        ' se: https://standardebooks.org/vocab/1.0"\n'
+        '      lang="en-US" xml:lang="en-US">\n'
+        "<head>\n"
+        '    <meta charset="utf-8"/>\n'
+        '    <meta name="viewport" content="width=device-width, initial-scale=1"/>\n'
+        f"    <title>{_xml_escape(book_title)} — Contents</title>\n"
+        '    <link rel="stylesheet" href="core.css"/>\n'
+        '    <link rel="stylesheet" href="local.css"/>\n'
+        '    <link rel="stylesheet" href="se.css"/>\n'
+        '    <link rel="stylesheet" href="reader.css"/>\n'
+        "</head>\n"
+        "<body>\n"
+        f"    {nav}\n"
+        '    <main class="reader-content reader-toc">\n'
+        f"        <h2>{_xml_escape(book_title)}</h2>\n"
+        "        <ol>\n"
+        f"{items}\n"
+        "        </ol>\n"
+        '        <p><a href="single-page.xhtml">Read entire book on one page →</a></p>'
+        f"{back_link}\n"
+        "    </main>\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+def _render_single_page(
+    *, book_metadata: dict[str, Any], chapters: list[tuple[str, str, str]]
+) -> str:
+    """Render ``single-page.xhtml`` — all chapter bodies concatenated."""
+    book_title = book_metadata.get("title", "")
+    nav = _reader_nav_html(
+        prev_link='<span class="muted">← Previous</span>',
+        next_link='<a href="index.xhtml">Contents</a>',
+    )
+    parts: list[str] = []
+    for i, (_, title, body) in enumerate(chapters):
+        if i > 0:
+            parts.append('<hr epub:type="hidden"/>')
+        anchor = f"chapter-{i + 1}"
+        parts.append(
+            f'<section id="{anchor}" class="reader-chapter" '
+            f'epub:type="chapter">\n'
+            f"<h2>{_xml_escape(title)}</h2>\n{body}\n</section>"
+        )
+    body_html = "\n".join(parts)
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<!DOCTYPE html>\n"
+        '<html xmlns="http://www.w3.org/1999/xhtml"\n'
+        '      xmlns:epub="http://www.idpf.org/2007/ops"\n'
+        '      epub:prefix="z3998: http://www.daisy.org/z3998/2012/vocab/structure/,'
+        ' se: https://standardebooks.org/vocab/1.0"\n'
+        '      lang="en-US" xml:lang="en-US">\n'
+        "<head>\n"
+        '    <meta charset="utf-8"/>\n'
+        '    <meta name="viewport" content="width=device-width, initial-scale=1"/>\n'
+        f"    <title>{_xml_escape(book_title)}</title>\n"
+        '    <link rel="stylesheet" href="core.css"/>\n'
+        '    <link rel="stylesheet" href="local.css"/>\n'
+        '    <link rel="stylesheet" href="se.css"/>\n'
+        '    <link rel="stylesheet" href="reader.css"/>\n'
+        "</head>\n"
+        "<body>\n"
+        f"    {nav}\n"
+        '    <main class="reader-content">\n'
+        f"{body_html}\n"
+        "    </main>\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+def generate_reader(
+    epub_bytes: bytes,
+    output_dir: Path,
+    book_metadata: dict[str, Any],
+) -> bool:
+    """Generate per-chapter XHTML reader pages from an EPUB.
+
+    Writes ``index.xhtml``, ``single-page.xhtml``, one file per spine chapter,
+    the EPUB's CSS (core/local/se), ``reader.css``, and an ``images/`` tree
+    into ``output_dir``. Returns ``True`` on success or ``False`` (with a
+    warning logged) when the EPUB is malformed or contains no chapters.
+    """
+    if not epub_bytes:
+        warn("reader: empty EPUB bytes — skipping.")
+        return False
+
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(epub_bytes))
+    except zipfile.BadZipFile as exc:
+        warn(f"reader: not a valid EPUB ({exc}) — skipping.")
+        return False
+
+    with zf:
+        try:
+            container = zf.read("META-INF/container.xml").decode(
+                "utf-8", errors="replace"
+            )
+        except KeyError:
+            warn("reader: META-INF/container.xml missing — skipping.")
+            return False
+        opf_path_m = re.search(r'full-path="([^"]+)"', container)
+        if not opf_path_m:
+            warn("reader: no rootfile full-path — skipping.")
+            return False
+        opf_path = opf_path_m.group(1)
+        opf_root = opf_path.rsplit("/", 1)[0] + "/" if "/" in opf_path else ""
+
+        try:
+            opf_text = zf.read(opf_path).decode("utf-8", errors="replace")
+        except KeyError:
+            warn(f"reader: OPF {opf_path} missing — skipping.")
+            return False
+
+        manifest, spine_ids = _parse_epub_opf(opf_text)
+
+        # Resolve spine into ordered XHTML hrefs.
+        chapters_raw: list[tuple[str, str]] = []  # (href, entry_path)
+        for item_id in spine_ids:
+            item = manifest.get(item_id)
+            if not item:
+                continue
+            href = item["href"]
+            if not (
+                item["media_type"] == "application/xhtml+xml"
+                or href.lower().endswith(".xhtml")
+            ):
+                continue
+            chapters_raw.append((href, opf_root + href))
+
+        # Also include spine items that are the toc/preface etc. Skip the
+        # nav-only toc.xhtml if it's purely structural — it duplicates index.
+        if not chapters_raw:
+            warn("reader: no XHTML spine items — skipping.")
+            return False
+
+        # Extract chapter bodies + titles.
+        chapters: list[tuple[str, str, str]] = []
+        for href, entry in chapters_raw:
+            try:
+                xhtml = zf.read(entry).decode("utf-8", errors="replace")
+            except KeyError:
+                continue
+            filename = href.rsplit("/", 1)[-1]
+            if filename == "toc.xhtml":
+                # The EPUB nav is replaced by our generated index.
+                continue
+            body = _extract_body(xhtml)
+            body = body.replace("../images/", "images/").replace(
+                "../css/", ""
+            )
+            title = _extract_chapter_title(xhtml, filename)
+            chapters.append((filename, title, body))
+
+        if not chapters:
+            warn("reader: no chapter bodies extracted — skipping.")
+            return False
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Copy CSS files from the manifest unchanged.
+        for item in manifest.values():
+            href = item["href"]
+            if not (
+                item["media_type"] == "text/css"
+                or href.lower().endswith(".css")
+            ):
+                continue
+            try:
+                css_bytes = zf.read(opf_root + href)
+            except KeyError:
+                continue
+            (output_dir / href.rsplit("/", 1)[-1]).write_bytes(css_bytes)
+
+        # Copy image files referenced by the manifest (and any other images
+        # that live under the OPF root, which catches cover.jpg etc.).
+        copied_images: set[str] = set()
+        images_out = output_dir / "images"
+        images_out.mkdir(parents=True, exist_ok=True)
+
+        def _copy_image(entry: str) -> None:
+            if entry in copied_images:
+                return
+            try:
+                data = zf.read(entry)
+            except KeyError:
+                return
+            rel = entry[len(opf_root):] if opf_root and entry.startswith(opf_root) else entry
+            # Flatten to ``images/<basename>`` regardless of source subdirs.
+            parts = rel.split("/")
+            if len(parts) > 1:
+                flat_name = parts[-1]
+            else:
+                flat_name = rel
+            target = images_out / flat_name
+            target.write_bytes(data)
+            copied_images.add(entry)
+
+        for item in manifest.values():
+            href = item["href"]
+            if href.lower().endswith(_IMAGE_EXTS):
+                _copy_image(opf_root + href)
+
+        # Catch images that are only referenced inline (or the cover image
+        # named via ``<meta name="cover">``) — sweep all zip entries.
+        for name in zf.namelist():
+            if name.endswith("/"):
+                continue
+            if not name.lower().endswith(_IMAGE_EXTS):
+                continue
+            if opf_root and not name.startswith(opf_root):
+                continue
+            _copy_image(name)
+
+        # Write reader chrome CSS.
+        (output_dir / "reader.css").write_text(READER_CSS, encoding="utf-8")
+
+        # Per-chapter XHTML pages with prev/next navigation.
+        filenames = [c[0] for c in chapters]
+        book_title = book_metadata.get("title", "")
+        for i, (filename, title, body) in enumerate(chapters):
+            prev_link = (
+                f'<a href="{filenames[i - 1]}">← Previous</a>'
+                if i > 0
+                else '<span class="muted">← Previous</span>'
+            )
+            next_link = (
+                f'<a href="{filenames[i + 1]}">Next →</a>'
+                if i < len(chapters) - 1
+                else '<span class="muted">Next →</span>'
+            )
+            page = _render_chapter_page(
+                title=title,
+                book_title=book_title,
+                body=body,
+                prev_link=prev_link,
+                next_link=next_link,
+            )
+            (output_dir / filename).write_text(page, encoding="utf-8")
+
+        # Index (table of contents) + single-page view.
+        (output_dir / "index.xhtml").write_text(
+            _render_index_page(book_metadata=book_metadata, chapters=chapters),
+            encoding="utf-8",
+        )
+        (output_dir / "single-page.xhtml").write_text(
+            _render_single_page(book_metadata=book_metadata, chapters=chapters),
+            encoding="utf-8",
+        )
+
+    return True
 
 
 # --------------------------------------------------------------------------- #
@@ -1106,7 +1610,7 @@ def run(force: bool = False) -> Stats:
             "Install with: pip install -r requirements.txt"
         )
 
-    for directory in (CONTENT_EBOOKS, COVERS_DIR, PREVIEWS_DIR, FEEDS_DIR, CACHE_DIR):
+    for directory in (CONTENT_EBOOKS, COVERS_DIR, PREVIEWS_DIR, FEEDS_DIR, READER_DIR, CACHE_DIR):
         directory.mkdir(parents=True, exist_ok=True)
 
     stats = Stats()

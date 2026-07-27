@@ -13,8 +13,15 @@
     <p class="muted">No downloads published yet.</p>
   {{ end }}
 
+  {{ if .Params.has_reader }}
+    {{ $readerUrl := printf "/reader/%s_%s/index.xhtml" .Params.author_slug .Params.slug }}
+    <div class="download-list">
+      <a class="btn primary" href="{{ $readerUrl }}">Read online</a>
+    </div>
+  {{ end }}
+
   <ul class="link-list">
-    {{ with .Params.preview }}<li><a href="{{ . }}">Read online</a></li>{{ end }}
+    {{ with .Params.preview }}<li><a href="{{ . }}">HTML preview</a></li>{{ end }}
     {{ with .Params.github_repo }}<li>Source: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.pg_url }}<li>Project Gutenberg: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.wikipedia_url }}<li>Wikipedia: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
