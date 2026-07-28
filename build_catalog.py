@@ -403,6 +403,37 @@ def pick_downloads(assets: list[dict[str, Any]]) -> dict[str, str]:
     return downloads
 
 
+def pick_download_counts(assets: list[dict[str, Any]]) -> dict[str, int]:
+    """Map GitHub release assets to per-slot all-time download counts.
+
+    Mirrors :func:`pick_downloads` but returns each matched slot's
+    ``download_count`` integer instead of its URL.
+    """
+    counts: dict[str, int] = {}
+    if not assets:
+        return counts
+    for asset in assets:
+        name = (asset.get("name") or "").lower()
+        if not name:
+            continue
+        if name.endswith("_advanced.epub"):
+            slot = "epub_advanced"
+        elif name.endswith(".epub"):
+            slot = "epub"
+        elif name.endswith(".azw3"):
+            slot = "azw3"
+        elif name.endswith(".kepub.epub"):
+            slot = "kepub"
+        else:
+            continue
+        raw = asset.get("download_count")
+        try:
+            counts[slot] = int(raw) if raw is not None else 0
+        except (TypeError, ValueError):
+            counts[slot] = 0
+    return counts
+
+
 # --- record assembly ------------------------------------------------------- #
 
 def build_book_record(
@@ -411,6 +442,7 @@ def build_book_record(
     config: dict[str, Any],
     opf: dict[str, Any],
     downloads: dict[str, str],
+    download_counts: dict[str, int],
 ) -> dict[str, Any]:
     """Assemble the full book record written into Hugo front matter."""
     repo_name = repo.get("name", "")
@@ -504,6 +536,8 @@ def build_book_record(
         "wikipedia_url": wikipedia_url,
         "ia_scan_url": ia_scan_url,
         "downloads": downloads,
+        "download_counts": download_counts,
+        "total_downloads": sum(download_counts.values()),
         "preview": preview_path,
         "repo_name": repo_name,
         "branch": branch,
@@ -762,9 +796,11 @@ def process_repo(
         ) or []
         latest = _latest_release(releases)
         downloads: dict[str, str] = {}
+        download_counts: dict[str, int] = {}
         release_published = ""
         if latest:
             downloads = pick_downloads(latest.get("assets") or [])
+            download_counts = pick_download_counts(latest.get("assets") or [])
             release_published = latest.get("published_at") or latest.get(
                 "created_at", ""
             )
@@ -814,7 +850,8 @@ def process_repo(
 
         # --- assemble record ---------------------------------------------
         book = build_book_record(
-            repo=repo, config=config, opf=opf, downloads=downloads
+            repo=repo, config=config, opf=opf, downloads=downloads,
+            download_counts=download_counts
         )
 
         # --- online reader (optional, from EPUB release asset) ------------

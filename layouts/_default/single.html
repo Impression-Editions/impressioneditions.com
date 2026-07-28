@@ -19,6 +19,7 @@
       <div class="book-meta">
         {{ with .Params.language }}<span>Language: {{ . }}</span>{{ end }}
         {{ with .Params.word_count }}<span>{{ . }} words</span>{{ end }}
+        {{ with .Params.total_downloads }}<span>{{ . }} downloads</span>{{ end }}
         {{ with .Params.pg_id }}<span>PG #{{ . }}</span>{{ end }}
       </div>
 

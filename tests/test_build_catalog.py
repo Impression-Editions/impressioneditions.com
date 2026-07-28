@@ -212,7 +212,7 @@ def test_build_book_record_uses_identifier_slugs():
     opf = bc.parse_opf(SAMPLE_OPF)
     book = bc.build_book_record(
         repo=SAMPLE_REPO, config=SAMPLE_CONFIG, opf=opf,
-        downloads={"epub": "http://e", "azw3": "http://a"},
+        downloads={"epub": "http://e", "azw3": "http://a"}, download_counts={"epub": 0},
     )
     assert book["author_slug"] == "george-webbe-dasent"
     assert book["slug"] == "burnt-njal"
@@ -239,7 +239,7 @@ def test_build_book_record_falls_back_when_no_identifier():
            "long_description": "", "subjects": [], "se_subjects": [],
            "language": "", "sources": [], "date": "", "wikipedia_urls": [],
            "word_count": ""}
-    book = bc.build_book_record(repo=repo, config=config, opf=opf, downloads={})
+    book = bc.build_book_record(repo=repo, config=config, opf=opf, downloads={}, download_counts={})
     assert book["author_slug"] == "jane-doe"
     assert book["slug"] == "some-book"
 
@@ -247,7 +247,7 @@ def test_build_book_record_falls_back_when_no_identifier():
 def test_to_front_matter_round_trips_fields():
     opf = bc.parse_opf(SAMPLE_OPF)
     book = bc.build_book_record(
-        repo=SAMPLE_REPO, config=SAMPLE_CONFIG, opf=opf, downloads={"epub": "u"}
+        repo=SAMPLE_REPO, config=SAMPLE_CONFIG, opf=opf, downloads={"epub": "u"}, download_counts={}
     )
     fm = bc.to_front_matter(book)
     assert fm.startswith("---\n") and fm.endswith("---\n")
