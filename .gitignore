@@ -9,7 +9,6 @@
 /static/covers/
 /static/previews/
 /static/feeds/
-/static/reader/
 
 # Python
 __pycache__/
