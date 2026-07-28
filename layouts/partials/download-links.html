@@ -13,16 +13,21 @@
     <p class="muted">No downloads published yet.</p>
   {{ end }}
 
+  <div class="download-list" style="margin-top:1.5em">
+    {{ if .Params.downloads.epub }}
+      <a class="btn" href="/read/?url={{ urlquery .Params.downloads.epub }}&title={{ urlquery .Params.title }}" target="_blank" rel="noopener">Read in Browser</a>
+    {{ end }}
+    {{ with .Params.ia_scan_url }}
+      <a class="btn" href="{{ . }}" target="_blank" rel="noopener">View Source Scan</a>
+    {{ end }}
+  </div>
   {{ if .Params.downloads.epub }}
-    <div class="download-list" style="margin-top:1.5em">
-      <a class="btn primary" href="/read/?url={{ urlquery .Params.downloads.epub }}&title={{ urlquery .Params.title }}" target="_blank" rel="noopener">Read in Browser (requires EPUB download first)</a>
-    </div>
+    <p class="muted" style="font-size:0.85em;margin-top:0.5em">Read in Browser requires downloading the EPUB first.</p>
   {{ end }}
 
   <ul class="link-list">
     {{ with .Params.github_repo }}<li>Source: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.pg_url }}<li>Project Gutenberg: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.wikipedia_url }}<li>Wikipedia: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
-    {{ with .Params.ia_scan_url }}<li>Source scan: <a href="{{ . }}" target="_blank" rel="noopener">Internet Archive</a></li>{{ end }}
   </ul>
 </section>
