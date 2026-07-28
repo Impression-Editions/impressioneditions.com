@@ -1435,7 +1435,6 @@ def write_indexes(books: list[dict[str, Any]]) -> None:
         "description: \"Browse the Impression Editions catalog.\"\n"
         "layout: \"list\"\n"
         "---\n\n"
-        "Browse our growing catalog of carefully produced ebooks.\n"
     )
     (CONTENT_EBOOKS / "_index.md").write_text(ebooks_index, encoding="utf-8")
 

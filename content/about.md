@@ -13,7 +13,7 @@ century. The results tell a story of how far we still have to go.
 
 ![The Public Domain Funnel](/img/pd-funnel.png)
 
-## Our Heroes
+## Our Inspiration
 
 **[Project Gutenberg](https://https://www.gutenberg.org/)**, founded in 1971, has produced roughly 78,000
 electronic texts in 54 years — a monumental achievement representing about
@@ -72,6 +72,14 @@ suggest corrections, or learn from the process. The door is open.
 
 ## Why "Impression Editions"?
 
-An *impression* is a single printing of a book — each one an opportunity to
-refine. We treat every release the same way: as a chance to make a classic
-text feel vivid, careful, and new again.
+An impression can be a printing of a book, or the mark a book leaves on
+its reader. We do the former so we can have the latter.
+
+In traditional publishing, an impression is fixed — ink on paper, immutable
+once the press runs. Digital publishing changes that. Every book we release
+lives on [GitHub](https://github.com/Impression-Editions), where readers can
+report errors, suggest corrections, and feed back into the text. A book that
+once took decades to correct can be refined in an afternoon.
+
+So the name carries our whole philosophy: we publish to leave a mark, and we
+built our process so that mark can keep getting sharper.
