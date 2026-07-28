@@ -1,7 +1,19 @@
 <header class="site-header">
   <div class="container">
     <a class="brand" href="{{ .Site.BaseURL }}">
-      <img src="/img/logo.svg" alt="Impression Editions" class="site-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" height="140" width="400" viewBox="0 0 400 140" class="site-logo" role="img" aria-label="Impression Editions">
+        <style type="text/css">
+          .logo-serif { fill: currentColor; font-family: georgia, "Times New Roman", serif; }
+          .logo-rule { stroke: currentColor; stroke-width: 1.5; }
+        </style>
+        <line class="logo-rule" x1="80" x2="320" y1="20" y2="20"/>
+        <text class="logo-serif" font-size="42" font-weight="bold" letter-spacing="8" text-anchor="middle" x="200" y="65">IMPRESSION</text>
+        <line class="logo-rule" x1="120" x2="190" y1="78" y2="78"/>
+        <polygon fill="currentColor" points="200,74 206,78 200,82 194,78"/>
+        <line class="logo-rule" x1="210" x2="280" y1="78" y2="78"/>
+        <text class="logo-serif" font-size="16" font-weight="bold" letter-spacing="10" text-anchor="middle" x="200" y="100">EDITIONS</text>
+        <line class="logo-rule" x1="80" x2="320" y1="115" y2="115"/>
+      </svg>
       <small>Free, carefully produced ebooks</small>
     </a>
     <nav class="site-nav">
