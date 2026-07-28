@@ -989,15 +989,41 @@ def write_indexes(books: list[dict[str, Any]]) -> None:
         author_name = author_books[0].get("author", author_slug)
         author_dir = CONTENT_EBOOKS / author_slug
         author_dir.mkdir(parents=True, exist_ok=True)
-        index_md = (
-            "---\n"
-            f"title: {yaml_quote(author_name)}\n"
-            f"author_slug: {yaml_quote(author_slug)}\n"
-            f"description: {yaml_quote('Books by ' + author_name)}\n"
-            "layout: \"list\"\n"
-            "---\n\n"
-            f"All ebooks by {author_name}.\n"
-        )
+        # Try to load bio from data/authors.json
+        bio = ""
+        wiki = ""
+        authors_data = ROOT / "data" / "authors.json"
+        if authors_data.exists():
+            import json as _json
+            try:
+                all_authors = _json.loads(authors_data.read_text())
+                entry = all_authors.get(author_slug, {})
+                bio = entry.get("bio", "")
+                wiki = entry.get("wikipedia", "")
+                if entry.get("name"):
+                    author_name = entry["name"]
+            except (ValueError, KeyError):
+                pass
+        desc = f"Books by {author_name}"
+        if bio:
+            desc = bio[:160]
+        index_lines = [
+            "---",
+            f"title: {yaml_quote(author_name)}",
+            f"author_slug: {yaml_quote(author_slug)}",
+            f"description: {yaml_quote(desc)}",
+            "layout: \"list\"",
+            "---",
+            "",
+        ]
+        if bio:
+            index_lines.append(bio)
+            index_lines.append("")
+        if wiki:
+            index_lines.append(f"Read more about {author_name} on [Wikipedia]({wiki}).")
+            index_lines.append("")
+        index_lines.append(f"All ebooks by {author_name}.")
+        index_md = "\n".join(index_lines)
         (author_dir / "_index.md").write_text(index_md, encoding="utf-8")
 
 
@@ -1013,6 +1039,49 @@ def iso_to_rfc822(iso: str) -> str:
         return dt.strftime("%a, %d %b %Y %H:%M:%S +0000")
     except (ValueError, TypeError):
         return ""
+
+
+def write_tag_pages(books: list[dict[str, Any]]) -> None:
+    """Generate /tags/<tag>/_index.md pages with descriptions for SEO."""
+    TAG_DIR = ROOT / "content" / "tags"
+    TAG_DIR.mkdir(parents=True, exist_ok=True)
+
+    tag_descriptions = {
+        "fiction": "Free, carefully edited fiction ebooks — novels, sagas, and adventure stories from the public domain.",
+        "novel": "Free, carefully edited novels from the public domain, produced with modern typography and semantic structure.",
+        "poetry": "Free, carefully edited poetry collections and verse from the public domain.",
+        "verse": "Free verse and poetry ebooks from the public domain, with proper stanza and line formatting.",
+        "epic-poetry": "Free epic poetry ebooks from the public domain — sagas, legends, and heroic verse.",
+        "nonfiction": "Free, carefully edited nonfiction ebooks from the public domain.",
+        "philosophy": "Free philosophy ebooks from the public domain — ethics, martial codes, and classical thought.",
+        "essays": "Free essay collections from the public domain, carefully edited and typeset.",
+        "short-stories": "Free short story collections from the public domain.",
+        "adventure": "Free adventure and exploration ebooks from the public domain.",
+        "fantasy": "Free fantasy and mythological ebooks from the public domain.",
+        "drama": "Free drama and theatrical works from the public domain.",
+        "childrens": "Free children's literature and fairy tales from the public domain.",
+        "saga": "Free Icelandic sagas and heroic legends from the public domain.",
+        "folklore": "Free folklore and fairy tale collections from the public domain.",
+    }
+
+    # Collect all tags
+    all_tags: set[str] = set()
+    for book in books:
+        all_tags.update(book.get("tags", []))
+
+    for tag in sorted(all_tags):
+        tag_slug = tag.lower().replace(" ", "-")
+        tag_dir = TAG_DIR / tag_slug
+        tag_dir.mkdir(parents=True, exist_ok=True)
+        desc = tag_descriptions.get(tag_slug, f"Free {tag} ebooks from Impression Editions.")
+        title = tag.replace("-", " ").title()
+        index_md = (
+            "---\n"
+            f"title: {yaml_quote(title)}\n"
+            f"description: {yaml_quote(desc)}\n"
+            "---\n\n"
+        )
+        (tag_dir / "_index.md").write_text(index_md, encoding="utf-8")
 
 
 def write_feeds(books: list[dict[str, Any]]) -> None:
@@ -1237,6 +1306,7 @@ def run(force: bool = False) -> Stats:
             books.append(book)
 
     write_indexes(books)
+    write_tag_pages(books)
     write_feeds(books)
     save_state(state)
 

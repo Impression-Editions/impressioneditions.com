@@ -1,0 +1,52 @@
+{
+  "anonymous": {
+    "name": "Anonymous",
+    "wikipedia": "",
+    "bio": "Works of unknown authorship from throughout literary history."
+  },
+  "edwin-arlington-robinson": {
+    "name": "Edwin Arlington Robinson",
+    "wikipedia": "https://en.wikipedia.org/wiki/Edwin_Arlington_Robinson",
+    "bio": "Edwin Arlington Robinson (1869–1935) was an American poet who won three Pulitzer Prizes for his work. He is best known for his short character poems and narrative verse."
+  },
+  "eir-kr-magn-sson-and-william-morris": {
+    "name": "Eiríkr Magnússon and William Morris",
+    "wikipedia": "https://en.wikipedia.org/wiki/William_Morris",
+    "bio": "Eiríkr Magnússon (1833–1913) was an Icelandic scholar who translated Norse sagas into English. William Morris (1834–1896) was an English designer, poet, and translator who co-translated several sagas with Magnússon."
+  },
+  "george-webbe-dasent": {
+    "name": "George Webbe Dasent",
+    "wikipedia": "https://en.wikipedia.org/wiki/George_Webbe_Dasent",
+    "bio": "Sir George Webbe Dasent (1817–1896) was an English translator and folklorist who brought Norse sagas and Scandinavian folk tales to English-speaking audiences."
+  },
+  "grammaticus": {
+    "name": "Saxo Grammaticus",
+    "wikipedia": "https://en.wikipedia.org/wiki/Saxo_Grammaticus",
+    "bio": "Saxo Grammaticus (c. 1150–c. 1220) was a Danish historian whose twelve-volume Gesta Danorum is the primary source for early Danish history and legend."
+  },
+  "inazo-nitobe": {
+    "name": "Inazō Nitobe",
+    "wikipedia": "https://en.wikipedia.org/wiki/Inaz%C5%8D_Nitobe",
+    "bio": "Inazō Nitobe (1862–1933) was a Japanese diplomat, educator, and writer. His book Bushido: The Soul of Japan introduced the samurai code of ethics to Western readers."
+  },
+  "joseph-conrad": {
+    "name": "Joseph Conrad",
+    "wikipedia": "https://en.wikipedia.org/wiki/Joseph_Conrad",
+    "bio": "Joseph Conrad (1857–1924) was a Polish-British novelist widely regarded as one of the greatest writers in the English language. His works explore the depths of human nature under extreme conditions."
+  },
+  "peter-christen-asbj-rnsen": {
+    "name": "Peter Christen Asbjørnsen and Jørgen Moe",
+    "wikipedia": "https://en.wikipedia.org/wiki/Peter_Christen_Asbj%C3%B8rnsen",
+    "bio": "Peter Christen Asbjørnsen (1812–1885) and Jørgen Moe (1813–1882) were Norwegian folklorists who collected and published the classic fairy tales of Norway."
+  },
+  "sturluson": {
+    "name": "Snorri Sturluson",
+    "wikipedia": "https://en.wikipedia.org/wiki/Snorri_Sturluson",
+    "bio": "Snorri Sturluson (1179–1241) was an Icelandic historian, poet, and politician. His Prose Edda is the most important source on Norse mythology."
+  },
+  "william-blake": {
+    "name": "William Blake",
+    "wikipedia": "https://en.wikipedia.org/wiki/William_Blake",
+    "bio": "William Blake (1757–1827) was an English poet, painter, and printmaker. Largely unrecognised during his life, he is now considered a seminal figure in the history of Romantic poetry and visual arts."
+  }
+}
