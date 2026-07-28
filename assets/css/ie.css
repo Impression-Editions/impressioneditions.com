@@ -84,8 +84,12 @@ img { max-width: 100%; height: auto; display: block; }
   font-size: 1.15rem;
   letter-spacing: 0.02em;
   color: var(--text);
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
 }
-.brand small { display: block; font-weight: 400; font-size: 0.7rem; color: var(--text-soft); letter-spacing: 0.12em; text-transform: uppercase; }
+.site-logo { height: 50px; width: auto; }
+.brand small { display: block; font-weight: 400; font-size: 0.7rem; color: var(--text-soft); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 0.25rem; }
 .site-nav { display: flex; gap: 1.25rem; }
 .site-nav a { color: var(--text-soft); font-family: var(--sans); font-size: 0.95rem; }
 .site-nav a:hover { color: var(--accent); }

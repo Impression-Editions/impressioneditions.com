@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" height="140" width="400" viewBox="0 0 400 140">
+	<title>Impression Editions</title>
+	<style type="text/css">
+		.serif{
+			fill: #111;
+			font-family: georgia, "Times New Roman", serif;
+		}
+
+		.rule{
+			stroke: #111;
+			stroke-width: 1.5;
+		}
+	</style>
+	<line class="rule" x1="80" x2="320" y1="20" y2="20"/>
+	<text class="serif" font-size="42" font-weight="bold" letter-spacing="8" text-anchor="middle" x="200" y="65">IMPRESSION</text>
+	<line class="rule" x1="120" x2="190" y1="78" y2="78"/>
+	<polygon fill="#111" points="200,74 206,78 200,82 194,78"/>
+	<line class="rule" x1="210" x2="280" y1="78" y2="78"/>
+	<text class="serif" font-size="16" font-weight="bold" letter-spacing="10" text-anchor="middle" x="200" y="100">EDITIONS</text>
+	<line class="rule" x1="80" x2="320" y1="115" y2="115"/>
+</svg>

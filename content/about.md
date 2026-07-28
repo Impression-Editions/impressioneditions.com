@@ -17,7 +17,9 @@ century. The results tell a story of how far we still have to go.
 
 **[Project Gutenberg](https://www.gutenberg.org/)**, founded in 1971, has produced roughly 78,000
 electronic texts in 54 years — a monumental achievement representing about
-**0.2%** of what exists. **[Standard Ebooks](https://standardebooks.org)**, founded around 2015, takes
+**0.2%** of what exists.
+
+**[Standard Ebooks](https://standardebooks.org)**, founded around 2015, takes
 those texts and transforms them into beautifully designed, professionally
 typeset ebooks. In 11 years they have produced roughly **1,400 titles** —
 about 0.004% of the public domain.
