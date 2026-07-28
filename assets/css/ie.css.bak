@@ -6,10 +6,8 @@
   --bg-alt: #f1ece3;
   --text: #2b2622;
   --text-soft: #6b6258;
-  --accent: #b8902e;
-  --accent-soft: #d4a93f;
-  --purple: #2d1b4e;
-  --purple-soft: #4a3270;
+  --accent: #8a4b2a;
+  --accent-soft: #b06a44;
   --line: #e2d9cc;
   --card: #fffdf9;
   --maxw: 1200px;
@@ -24,10 +22,8 @@
     --bg-alt: #24201c;
     --text: #ece4d8;
     --text-soft: #a99e90;
-    --accent: #d4a93f;
-    --accent-soft: #e0c060;
-    --purple: #6b5a8e;
-    --purple-soft: #8870b0;
+    --accent: #d68b5e;
+    --accent-soft: #e0a37c;
     --line: #38312a;
     --card: #262220;
   }
@@ -68,7 +64,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---- Header / nav ---- */
 .site-header {
-  border-bottom: 2px solid var(--purple);
+  border-bottom: 1px solid var(--line);
   background: var(--bg);
   position: sticky;
   top: 0;
@@ -100,7 +96,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---- Footer ---- */
 .site-footer {
-  border-top: 2px solid var(--purple);
+  border-top: 1px solid var(--line);
   margin-top: 4rem;
   padding: 2rem 0;
   color: var(--text-soft);
