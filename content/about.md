@@ -15,7 +15,7 @@ century. The results tell a story of how far we still have to go.
 
 ## Our Inspiration
 
-**[Project Gutenberg](https://https://www.gutenberg.org/)**, founded in 1971, has produced roughly 78,000
+**[Project Gutenberg](https://www.gutenberg.org/)**, founded in 1971, has produced roughly 78,000
 electronic texts in 54 years — a monumental achievement representing about
 **0.2%** of what exists. **[Standard Ebooks](https://standardebooks.org)**, founded around 2015, takes
 those texts and transforms them into beautifully designed, professionally
@@ -34,19 +34,25 @@ books per year (their track record), matching Gutenberg's catalog would take ove
 We built a production pipeline that brings the time per book from months down
 to **days**, sometimes a single day, without sacrificing quality. Every book
 is sourced from a reliable transcription, compared against original page scans
-to correct errors, and enhanced with proper typography, and semantic structure. 
+to correct errors, and enhanced with proper typography and semantic structure.
 The output is an EPUB that stands alongside the
 best available editions — and the build process is fully reproducible from
 source.
 
-## I saw 'we', but I'm currently one person.
-I can do 1 book every 1-2 days.
+## I say "we", but I'm currently one person.
 
-Imagine a production rate of 3–5 books per day: in under a year,
-we could match Standard Ebooks' entire catalog. In five years, over 9,000
-carefully edited titles.
+I can produce one book every 1–2 days. At a production rate of 3–5 books
+per day, we could match Standard Ebooks' entire catalog in under a year.
+In five years, over 9,000 carefully edited titles.
 
-Imagine if we could do more that--we might even start closing the gap.
+If we could do even more than that — we might actually start closing the gap.
+
+### Make the public domain accessible today
+- What if instead of one or two transcription efforts and ebook creation/publishing entities, we had a whole network of them?
+- What if we shared our best methods?
+- What if we collaboratively shared our efforts to minimize the overlap of our work?
+
+I think that is how you close the gap and *make the public domain accessible today*.
 
 ## Our standards
 
