@@ -1,0 +1,69 @@
+{{ $title := .Title | plainify }}
+{{ $description := "" }}
+{{ $image := "" }}
+{{ $url := .Permalink }}
+
+{{ with .Params.seo_description }}
+  {{ $description = . }}
+{{ else with .Description }}
+  {{ $description = . }}
+{{ else }}
+  {{ if .IsPage }}
+    {{ with .Summary }}{{ $description = . }}{{ end }}
+  {{ else }}
+    {{ $description = .Site.Params.description }}
+  {{ end }}
+{{ end }}
+
+{{ with .Params.cover }}
+  {{ $image = printf "%s%s" $.Site.BaseURL (strings.TrimPrefix "/" .) }}
+{{ else }}
+  {{ $image = printf "%s/img/ie-avatar.png" .Site.BaseURL }}
+{{ end }}
+
+{{ $cleanDesc := $description | plainify | truncate 160 }}
+
+<title>{{ if .IsHome }}{{ .Site.Title }} — {{ .Site.Params.description }}{{ else }}{{ $title }} — {{ .Site.Title }}{{ end }}</title>
+<meta name="title" content="{{ $title }}">
+<meta name="description" content="{{ $cleanDesc }}">
+<link rel="canonical" href="{{ $url }}">
+
+<meta property="og:type" content="{{ if .IsPage }}book{{ else }}website{{ end }}">
+<meta property="og:url" content="{{ $url }}">
+<meta property="og:title" content="{{ $title }}">
+<meta property="og:description" content="{{ $cleanDesc }}">
+<meta property="og:image" content="{{ $image }}">
+<meta property="og:image:width" content="400">
+<meta property="og:image:height" content="600">
+<meta property="og:site_name" content="{{ .Site.Title }}">
+{{ with .Params.author }}<meta property="og:author" content="{{ . | plainify }}">{{ end }}
+{{ with .Params.language }}<meta property="og:locale" content="{{ replace . "-" "_" }}">{{ end }}
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="{{ $url }}">
+<meta name="twitter:title" content="{{ $title }}">
+<meta name="twitter:description" content="{{ $cleanDesc }}">
+<meta name="twitter:image" content="{{ $image }}">
+
+{{ if and .IsPage .Params.author }}
+{{ $author := .Params.author | plainify }}
+{{ $lang := .Params.language | default "en" }}
+{{ $coverUrl := "" }}
+{{ with .Params.cover }}{{ $coverUrl = printf "%s%s" $.Site.BaseURL (strings.TrimPrefix "/" .) }}{{ end }}
+{{ $bookDesc := (.Params.description | default $cleanDesc) | plainify }}
+{{ $sameAs := slice }}
+{{ with .Params.pg_url }}{{ $sameAs = $sameAs | append . }}{{ end }}
+{{ with .Params.wikipedia_url }}{{ $sameAs = $sameAs | append . }}{{ end }}
+{{ $offers := dict "@type" "Offer" "price" "0" "priceCurrency" "USD" "availability" "https://schema.org/InStock" }}
+{{ with .Params.downloads.epub }}{{ $offers = merge $offers (dict "url" .) }}{{ end }}
+{{ $book := dict "@context" "https://schema.org" "@type" "Book" "name" $title "author" (dict "@type" "Person" "name" $author) "inLanguage" $lang "bookFormat" "https://schema.org/EBook" "license" .Site.Params.licenseURL "publisher" (dict "@type" "Organization" "name" .Site.Title "url" .Site.BaseURL) "offers" $offers }}
+{{ with $coverUrl }}{{ $book = merge $book (dict "thumbnailUrl" .) }}{{ end }}
+{{ with $bookDesc }}{{ $book = merge $book (dict "description" .) }}{{ end }}
+{{ if gt (len $sameAs) 0 }}{{ $book = merge $book (dict "sameAs" $sameAs) }}{{ end }}
+<script type="application/ld+json">{{ jsonify $book | safeJS }}</script>
+{{ end }}
+
+{{ if .IsHome }}
+{{ $org := dict "@context" "https://schema.org" "@type" "Organization" "name" .Site.Title "url" .Site.BaseURL "description" .Site.Params.description "logo" (printf "%s/img/ie-avatar.png" .Site.BaseURL) "sameAs" (slice "https://github.com/Impression-Editions") }}
+<script type="application/ld+json">{{ jsonify $org | safeJS }}</script>
+{{ end }}

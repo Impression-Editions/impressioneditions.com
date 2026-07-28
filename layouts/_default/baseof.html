@@ -9,8 +9,6 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/img/favicon-180x180.png">
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#2D1B4E">
-  <title>{{ block "title" . }}{{ .Title }} — {{ .Site.Title }}{{ end }}</title>
-  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +16,8 @@
 
   {{ $css := resources.Get "css/ie.css" | minify | fingerprint }}
   <link rel="stylesheet" href="{{ $css.RelPermalink }}">
+
+  {{ partial "seo.html" . }}
 
   {{ hugo.Generator }}
 </head>

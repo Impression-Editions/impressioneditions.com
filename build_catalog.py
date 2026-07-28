@@ -366,6 +366,41 @@ def description_for(opf: dict[str, Any]) -> str:
     return opf.get("description", "")
 
 
+def _build_seo_description(
+    title: str, author: str, book_type: str, word_count: str, language: str
+) -> str:
+    """Build a concise, keyword-rich description for search engines and social cards."""
+    parts: list[str] = []
+
+    type_phrase = {
+        "novel": "a classic novel",
+        "verse": "a classic book of poetry",
+        "short-stories": "a collection of classic short stories",
+        "nonfiction": "a classic nonfiction work",
+        "essays": "a collection of classic essays",
+        "philosophy": "a classic philosophical work",
+        "drama": "a classic drama",
+        "epic-poetry": "a classic epic poem",
+        "saga": "a classic saga",
+        "folklore": "a collection of classic folklore",
+    }.get(book_type, "a classic book")
+
+    parts.append(f"{title} by {author} — {type_phrase}")
+
+    if word_count:
+        wc = word_count.replace(",", "")
+        try:
+            wc_int = int(wc)
+            if wc_int > 50000:
+                parts.append(f"{word_count} words")
+        except ValueError:
+            pass
+
+    parts.append("carefully edited and freely available as an EPUB from Impression Editions")
+
+    return ". ".join(parts) + "."
+
+
 # --- release asset parsing ------------------------------------------------- #
 
 def pick_downloads(assets: list[dict[str, Any]]) -> dict[str, str]:
@@ -523,6 +558,7 @@ def build_book_record(
         "lastmod": normalise_date(lastmod_raw),
         "weight": weight,
         "description": description_for(opf),
+        "seo_description": _build_seo_description(title, author, book_type, opf.get("word_count", ""), language),
         "language": language,
         "pg_id": pg_id,
         "book_type": book_type,
