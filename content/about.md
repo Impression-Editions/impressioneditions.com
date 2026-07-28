@@ -13,9 +13,11 @@ century. The results tell a story of how far we still have to go.
 
 ![The Public Domain Funnel](/img/pd-funnel.png)
 
-**Project Gutenberg**, founded in 1971, has produced roughly 78,000
+## Our Heroes
+
+**[Project Gutenberg](https://https://www.gutenberg.org/)**, founded in 1971, has produced roughly 78,000
 electronic texts in 54 years — a monumental achievement representing about
-**0.2%** of what exists. **Standard Ebooks**, founded around 2015, takes
+**0.2%** of what exists. **[Standard Ebooks](https://standardebooks.org)**, founded around 2015, takes
 those texts and transforms them into beautifully designed, professionally
 typeset ebooks. In 11 years they have produced roughly **1,400 titles** —
 about 0.004% of the public domain.
@@ -26,25 +28,28 @@ does justice to the work, is immense.
 ## A matter of pace
 
 Standard Ebooks produces each book through careful, labor-intensive volunteer
-work. A typical title takes **three to six months**. At that rate — about 127
-books per year — matching Gutenberg's catalog would take over a century.
+work. A typical title takes anywhere from **three days to six months**. At an overall rate of about 127
+books per year, matching Gutenberg's catalog would take over a century.
 
 We built a production pipeline that brings the time per book from months down
 to **days**, sometimes a single day, without sacrificing quality. Every book
 is sourced from a reliable transcription, compared against original page scans
-to correct errors, and enhanced with proper typography, semantic structure,
-and accessibility features. The output is an EPUB that stands alongside the
+to correct errors, and enhanced with proper typography, and semantic structure. 
+The output is an EPUB that stands alongside the
 best available editions — and the build process is fully reproducible from
 source.
 
-At a production rate of 3–5 books per day, the math changes: in under a year,
+## I saw 'we', but I'm currently one person.
+I can do 1 book every 1-2 days.  
+
+Imagine a production rate of 3–5 books per day: in under a year,
 we could match Standard Ebooks' entire catalog. In five years, over 9,000
 carefully edited titles.
 
+Imagine if we could do more that--we might even start closing the gap.
+
 ## Our standards
 
-- **Accessible by default.** Our editions conform to EPUB Accessibility 1.1
-  (WCAG 2.2 Level AA), with semantic structure, alt text, and reading order.
 - **Open source.** The complete source for every book lives on
   [GitHub](https://github.com/Impression-Editions), so anyone can inspect,
   learn from, or build upon our work.
