@@ -14,16 +14,12 @@
   {{ end }}
 
   <div class="download-list" style="margin-top:1.5em">
-    {{ if .Params.downloads.epub }}
-      <a class="btn" href="/read/?url={{ urlquery .Params.downloads.epub }}&title={{ urlquery .Params.title }}" target="_blank" rel="noopener">Read in Browser</a>
-    {{ end }}
+    <a class="btn" href="/read/" target="_blank" rel="noopener">Read in Browser</a>
     {{ with .Params.ia_scan_url }}
       <a class="btn" href="{{ . }}" target="_blank" rel="noopener">View Source Scan</a>
     {{ end }}
   </div>
-  {{ if .Params.downloads.epub }}
-    <p class="muted" style="font-size:0.85em;margin-top:0.5em">Read in Browser requires downloading the EPUB first.</p>
-  {{ end }}
+  <p class="muted" style="font-size:0.85em;margin-top:0.5em">Read in Browser requires downloading an EPUB first.</p>
 
   <ul class="link-list">
     {{ with .Params.github_repo }}<li>Source: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
