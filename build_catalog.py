@@ -931,9 +931,22 @@ def write_book(
 
     if cover_bytes:
         COVERS_DIR.mkdir(parents=True, exist_ok=True)
-        (COVERS_DIR / f"{book['author_slug']}_{book['slug']}.jpg").write_bytes(
-            cover_bytes
-        )
+        cover_name = f"{book['author_slug']}_{book['slug']}.jpg"
+        cover_path = COVERS_DIR / cover_name
+        cover_path.write_bytes(cover_bytes)
+        # Generate web-optimized thumbnail (400px wide, quality 85)
+        try:
+            from PIL import Image as _PILImage
+            import io as _io
+            im = _PILImage.open(_io.BytesIO(cover_bytes))
+            w, h = im.size
+            if w > 400:
+                im = im.resize((400, int(h * 400 / w)), _PILImage.LANCZOS)
+            buf = _io.BytesIO()
+            im.convert("RGB").save(buf, "JPEG", quality=85, optimize=True)
+            (COVERS_DIR / cover_name).write_bytes(buf.getvalue())
+        except Exception:
+            pass  # keep original if thumbnailing fails
 
     if preview_text:
         PREVIEWS_DIR.mkdir(parents=True, exist_ok=True)
