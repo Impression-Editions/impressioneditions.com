@@ -23,5 +23,6 @@
     {{ with .Params.github_repo }}<li>Source: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.pg_url }}<li>Project Gutenberg: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
     {{ with .Params.wikipedia_url }}<li>Wikipedia: <a href="{{ . }}">{{ . }}</a></li>{{ end }}
+    {{ with .Params.ia_scan_url }}<li>Source scan: <a href="{{ . }}" target="_blank" rel="noopener">Internet Archive</a></li>{{ end }}
   </ul>
 </section>

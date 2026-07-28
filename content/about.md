@@ -28,8 +28,8 @@ does justice to the work, is immense.
 ## A matter of pace
 
 Standard Ebooks produces each book through careful, labor-intensive volunteer
-work. A typical title takes anywhere from **three days to six months**. At an overall rate of about 127
-books per year, matching Gutenberg's catalog would take over a century.
+work. At an overall rate of about 127
+books per year (their track record), matching Gutenberg's catalog would take over a century.
 
 We built a production pipeline that brings the time per book from months down
 to **days**, sometimes a single day, without sacrificing quality. Every book
@@ -40,7 +40,7 @@ best available editions — and the build process is fully reproducible from
 source.
 
 ## I saw 'we', but I'm currently one person.
-I can do 1 book every 1-2 days.  
+I can do 1 book every 1-2 days.
 
 Imagine a production rate of 3–5 books per day: in under a year,
 we could match Standard Ebooks' entire catalog. In five years, over 9,000

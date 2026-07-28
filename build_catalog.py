@@ -465,6 +465,20 @@ def build_book_record(
     wiki_urls = opf.get("wikipedia_urls") or []
     wikipedia_url = wiki_urls[0] if wiki_urls else ""
 
+    # Extract Internet Archive scan URL from config
+    ia_scan_url = (
+        config.get("ia_scan_url")
+        or (f"https://archive.org/details/{config['ia_scan_id']}"
+            if config.get("ia_scan_id") else "")
+        or ""
+    )
+    if not ia_scan_url and isinstance(config.get("print_source"), dict):
+        ps = config["print_source"]
+        ia_scan_url = ps.get("ia_url") or (
+            f"https://archive.org/details/{ps['ia_scan_id']}"
+            if ps.get("ia_scan_id") else ""
+        )
+
     cover_path = f"/covers/{author_slug}_{title_slug}.jpg"
     preview_path = f"/previews/{author_slug}_{title_slug}.html"
 
@@ -488,6 +502,7 @@ def build_book_record(
         "github_repo": f"https://github.com/{repo_full}",
         "pg_url": pg_url,
         "wikipedia_url": wikipedia_url,
+        "ia_scan_url": ia_scan_url,
         "downloads": downloads,
         "preview": preview_path,
         "repo_name": repo_name,
