@@ -366,6 +366,32 @@ def description_for(opf: dict[str, Any]) -> str:
     return opf.get("description", "")
 
 
+# Load enriched descriptions once at module level
+_BOOK_DESCRIPTIONS: dict[str, str] | None = None
+
+
+def _get_book_descriptions() -> dict[str, str]:
+    global _BOOK_DESCRIPTIONS
+    if _BOOK_DESCRIPTIONS is None:
+        path = ROOT / "data" / "book-descriptions.json"
+        if path.exists():
+            try:
+                _BOOK_DESCRIPTIONS = json.loads(path.read_text())
+            except (ValueError, OSError):
+                _BOOK_DESCRIPTIONS = {}
+        else:
+            _BOOK_DESCRIPTIONS = {}
+    return _BOOK_DESCRIPTIONS
+
+
+def _enriched_description(title_slug: str, fallback: str) -> str:
+    """Use Wikipedia description if the OPF description is thin."""
+    enriched = _get_book_descriptions().get(title_slug, "")
+    if enriched:
+        return enriched
+    return fallback
+
+
 def _build_seo_description(
     title: str, author: str, book_type: str, word_count: str, language: str
 ) -> str:
@@ -557,7 +583,7 @@ def build_book_record(
         "date": normalise_date(date_raw),
         "lastmod": normalise_date(lastmod_raw),
         "weight": weight,
-        "description": description_for(opf),
+        "description": _enriched_description(title_slug, description_for(opf)),
         "seo_description": _build_seo_description(title, author, book_type, opf.get("word_count", ""), language),
         "language": language,
         "pg_id": pg_id,
