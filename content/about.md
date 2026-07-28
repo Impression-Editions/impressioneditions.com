@@ -65,9 +65,9 @@ I think that is how you close the gap and *make the public domain accessible tod
   [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). The
   underlying source texts are believed to be in the public domain.
 - **High Tech.** 
-  - Our automated pipeline begins with Standard Ebooks' best-in-class software, then takes it further.
+  - Our [automated pipeline](https://github.com/Impression-Editions/impression_editions) begins with Standard Ebooks' best-in-class software, then takes it further.
   We automate more, to meet our goal of getting more books to you sooner.
-  - Our ability to spot errors (errata) in transcriptions is unmatched.  Compare for yourself.  You will not
+  - [Our ability to spot errors (errata) in transcriptions is unmatched](https://github.com/Impression-Editions/Gerrata).  Compare for yourself.  You will not
   find an ebook that is more faithful to the original text than ours, and there is
   good reason for that: each book is meticulously compared between the existing transcription and the original scans for differences, and this systematically results in a more faithful product.  Where others use their eyes, we use code...and proud of it.
 
@@ -87,7 +87,7 @@ suggest corrections, or learn from the process. The door is open.
 
 ### The catch
 
-We don't actually take volunteers.  Instead, we encourage franchising and tech transfer.  You want to make ebooks?  [Fork our pipeline](https://github.com/Travis42/impression_editions), make it your own, and give yourself a nice publishing name.  Agree to collaborate to make more books, better, faster.
+We don't actually take volunteers.  Instead, we encourage franchising and tech transfer.  You want to make ebooks?  Clone [Gerrata](https://github.com/Impression-Editions/Gerrata), our errata finding software.  [Fork our pipeline](https://github.com/Impression-Editions/impression_editions), make it your own, and give yourself a nice publishing name.  Agree to collaborate to make more books, better, faster.
 
 ## Why "Impression Editions"?
 
