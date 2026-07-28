@@ -74,9 +74,7 @@ I think that is how you close the gap and *make the public domain accessible tod
 
 ## Get involved
 
-We're a small project with large ambitions. If you're interested in making
-books — editing, typesetting, sourcing, or contributing to the pipeline —
-we'd like to hear from you.
+We're a small project with large ambitions. We'd like to hear from you.
 
 - **Email:** [info@impressioneditions.com](mailto:info@impressioneditions.com)
 - **GitHub:** [github.com/Impression-Editions](https://github.com/Impression-Editions)
