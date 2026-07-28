@@ -29,7 +29,7 @@ const isFBZ = ({ name, type }) =>
 
 const makeZipLoader = async file => {
     const { configure, ZipReader, BlobReader, TextWriter, BlobWriter } =
-        await import('./vendor/zip.js')
+        await import('/foliate/zip.js')
     configure({ useWebWorkers: false })
     const reader = new ZipReader(new BlobReader(file))
     const entries = await reader.getEntries()
@@ -110,7 +110,7 @@ export const makeBook = async file => {
     else {
         const { isMOBI, MOBI } = await import('./mobi.js')
         if (await isMOBI(file)) {
-            const fflate = await import('./vendor/fflate.js')
+            const fflate = await import('/foliate/fflate.js')
             book = await new MOBI({ unzlib: fflate.unzlibSync }).open(file)
         }
         else if (isFB2(file)) {
