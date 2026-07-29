@@ -41,7 +41,7 @@ The output is an EPUB that stands alongside the
 best available editions — and the build process is fully reproducible from
 source.
 
-## I say "we", but I'm currently one person.
+## I say "we", but this is currently a one-person operation
 
 I can produce one book every 1–2 days. At a production rate of 3–5 books
 per day, we could match Standard Ebooks' entire catalog in under a year.
