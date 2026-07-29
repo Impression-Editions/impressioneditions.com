@@ -12,7 +12,7 @@ unsafe = true
 wrapStandAloneImageWithinParagraph = false
 
 [params]
-  description = "Free, carefully produced ebooks."
+  description = "Scrupulously edited ebooks, free to read."
   license = "CC BY-NC 4.0"
   licenseURL = "https://creativecommons.org/licenses/by-nc/4.0/"
 

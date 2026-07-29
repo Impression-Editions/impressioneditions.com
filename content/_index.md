@@ -1,4 +1,4 @@
 ---
 title: "Impression Editions"
-description: "Free, carefully produced ebooks."
+description: "Scrupulously edited ebooks, free to read."
 ---
