@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+from urllib.request import urlopen
 
 try:
     import requests
@@ -610,11 +611,13 @@ def build_book_record(
 
 def _check_errata(repo_full: str, branch: str) -> bool:
     """Return True if the book repo contains a non-empty errata.json."""
-    errata_text = cached_or_fetch_text(
-        "errata.json",
-        f"{RAW_BASE}/{repo_full}/{branch}/errata.json",
-    )
-    return bool(errata_text and len(errata_text.strip()) > 5)
+    try:
+        url = f"{RAW_BASE}/{repo_full}/{branch}/errata.json"
+        with urlopen(url, timeout=15) as resp:
+            data = resp.read().decode("utf-8", errors="replace")
+        return bool(data and len(data.strip()) > 5)
+    except Exception:
+        return False
 
 
 def _weight_from_date(date_raw: str) -> int:
