@@ -4,12 +4,17 @@ description: "What Impression Editions is, the problem we exist to solve, and ho
 layout: "about"
 ---
 
-## The library is enormous. The shelves are mostly empty.
+## The library is enormous. The shelves are full — but mostly with rough copies.
 
 There are an estimated **30 to 40 million** public domain works in existence —
 books whose copyrights have expired, belonging to everyone and no one.
 Digitizing them has been the work of dedicated volunteers for over half a
-century. The results tell a story of how far we still have to go.
+century. The result is widespread availability: sites like ManyBooks and
+Google Play Books put public domain titles in front of millions of readers every
+day. But the editions they distribute are mostly raw transcriptions —
+Project Gutenberg text repackaged with a new cover.
+
+In other words: the books are available, but the editions are poor in terms of presentation quality, and arguably, faithfulness to the orginal texts.
 
 ![The Public Domain Funnel](/img/pd-funnel.png)
 
@@ -24,8 +29,7 @@ those texts and transforms them into beautifully designed, professionally
 typeset ebooks. In 11 years they have produced roughly **1,400 titles** —
 about 0.004% of the public domain.
 
-The gap between what *could* be read and what *can* be read, in a format that
-does justice to the work, is immense.
+The gap between what millions of people are reading and what they *deserve* to be reading — in a format that does justice to the work — is immense.
 
 ## A matter of pace
 
@@ -67,9 +71,7 @@ I think that is how you close the gap and *make the public domain accessible tod
 - **High Tech.** 
   - Our [automated pipeline](https://github.com/Impression-Editions/impression_editions) begins with Standard Ebooks' best-in-class software, then takes it further.
   We automate more, to meet our goal of getting more books to you sooner.
-  - [Our ability to spot errors (errata) in transcriptions is unmatched](https://github.com/Impression-Editions/Gerrata).  Compare for yourself.  You will not
-  find an ebook that is more faithful to the original text than ours, and there is
-  good reason for that: each book is meticulously compared between the existing transcription and the original scans for differences, and this systematically results in a more faithful product.  Where others use their eyes, we use code...and proud of it.
+  - [Our ability to spot errors (errata) in transcriptions is systematic and thorough](https://github.com/Impression-Editions/Gerrata).  Each book is compared character-by-character between the existing transcription and the original page scans, catching errors that human proofreaders miss — and catching them in a consistent way.  Where others use their eyes, we use code...and proud of it.
 
 
 ## Get involved
@@ -85,7 +87,7 @@ suggest corrections, or learn from the process. The door is open.
 
 ### The catch
 
-We don't actually take volunteers.  Instead, we encourage franchising and tech transfer.  You want to make ebooks?  Clone [Gerrata](https://github.com/Impression-Editions/Gerrata), our errata finding software.  [Fork our pipeline](https://github.com/Impression-Editions/impression_editions), make it your own, and give yourself a nice publishing name.  Agree to collaborate to make more books, better, faster.
+We don't actually take volunteers.  Instead, we encourage franchising and tech transfer.  You want to make ebooks?  Clone [Gerrata](https://github.com/Impression-Editions/Gerrata), our errata finding software.  [Fork our pipeline](https://github.com/Impression-Editions/impression_editions), make it your own, and give yourself a nice publishing name.  Agree to collaborate to minimize overlap and make more books, better, faster.
 
 ## Why "Impression Editions"?
 

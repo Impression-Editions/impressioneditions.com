@@ -207,6 +207,36 @@ img { max-width: 100%; height: auto; display: block; }
   border: 1px solid var(--line);
 }
 
+/* ---- Errata badge (Gerrata Verified) ---- */
+.book-card .cover { position: relative; }
+.errata-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  background: #2d6a4f;
+  color: #fff;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.92;
+}
+.errata-badge-inline {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  background: #2d6a4f;
+  color: #fff;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
 /* ---- Prose pages (about) ---- */
 .prose { max-width: 46rem; margin: 0 auto; padding: 2rem 0; }
 .prose h1 { font-size: 2.2rem; }

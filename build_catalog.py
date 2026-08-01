@@ -574,6 +574,7 @@ def build_book_record(
     preview_path = f"/previews/{author_slug}_{title_slug}.html"
 
     weight = _weight_from_date(date_raw)
+    has_errata = _check_errata(repo_full, branch)
 
     return {
         "title": title,
@@ -602,8 +603,18 @@ def build_book_record(
         "repo_name": repo_name,
         "branch": branch,
         "word_count": opf.get("word_count", ""),
+        "has_errata": has_errata,
         "draft": False,
     }
+
+
+def _check_errata(repo_full: str, branch: str) -> bool:
+    """Return True if the book repo contains a non-empty errata.json."""
+    errata_text = cached_or_fetch_text(
+        "errata.json",
+        f"{RAW_BASE}/{repo_full}/{branch}/errata.json",
+    )
+    return bool(errata_text and len(errata_text.strip()) > 5)
 
 
 def _weight_from_date(date_raw: str) -> int:
