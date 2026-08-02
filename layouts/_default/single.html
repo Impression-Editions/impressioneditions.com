@@ -21,7 +21,7 @@
         {{ with .Params.word_count }}<span>{{ . }} words</span>{{ end }}
         {{ with .Params.total_downloads }}<span>{{ . }} downloads</span>{{ end }}
         {{ with .Params.pg_id }}<span>PG #{{ . }}</span>{{ end }}
-        {{ if .Params.has_errata }}<span class="errata-badge-inline" data-tooltip="This edition was systematically compared character-by-character against original page scans using Gerrata, our errata-finding tool. Errors in the transcription have been identified and corrected, resulting in the highest possible fidelity to the original printed work.">✓ Gerrata Verified</span>{{ end }}
+        {{ if .Params.has_errata }}<span class="errata-badge-inline" data-tooltip="This edition was compared character-by-character against original page scans using Gerrata to find and correct transcription errors. The result is the highest fidelity to the original printed work.">✓ Gerrata Verified</span>{{ end }}
       </div>
 
       {{ if or .Params.subjects .Params.tags }}

@@ -221,7 +221,7 @@ img { max-width: 100%; height: auto; display: block; }
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  width: 260px;
+  width: 300px;
   padding: 0.5rem 0.65rem;
   border-radius: var(--radius);
   background: var(--text);
