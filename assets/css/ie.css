@@ -209,11 +209,59 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---- Errata badge (Gerrata Verified) ---- */
 .book-card .cover { position: relative; }
+.errata-badge,
+.errata-badge-inline {
+  position: relative;
+  cursor: help;
+}
+.errata-badge::after,
+.errata-badge-inline::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.45;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.errata-badge::before,
+.errata-badge-inline::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--text);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 10;
+}
+.errata-badge:hover::after,
+.errata-badge-inline:hover::after,
+.errata-badge:hover::before,
+.errata-badge-inline:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
 .errata-badge {
   position: absolute;
   bottom: 8px;
   right: 8px;
-  font-family: var(--sans);
   font-size: 0.6rem;
   font-weight: 600;
   padding: 0.15rem 0.4rem;
@@ -222,7 +270,6 @@ img { max-width: 100%; height: auto; display: block; }
   color: #fff;
   line-height: 1.3;
   white-space: nowrap;
-  pointer-events: none;
   opacity: 0.92;
 }
 .errata-badge-inline {

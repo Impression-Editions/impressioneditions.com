@@ -7,7 +7,7 @@
       <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 300'%3E%3Crect width='200' height='300' fill='%23e2d9cc'/%3E%3C/svg%3E" alt="">
     {{ end }}
     {{ if .Params.has_errata }}
-    <span class="errata-badge" title="Scanned for errata with Gerrata — highest fidelity to the original">✓ Gerrata Verified</span>
+    <span class="errata-badge" data-tooltip="This edition was systematically compared character-by-character against original page scans using Gerrata, our errata-finding tool. Errors in the transcription have been identified and corrected, resulting in the highest possible fidelity to the original printed work.">✓ Gerrata Verified</span>
     {{ end }}
   </a>
   <h3 class="title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
