@@ -4,30 +4,31 @@ description: "What Impression Editions is, the problem we exist to solve, and ho
 layout: "about"
 ---
 
-## The library is enormous. The shelves are full — but mostly with rough copies.
-
-There are an estimated **30 to 40 million** public domain works in existence —
-books whose copyrights have expired, belonging to everyone and no one.
-Digitizing them has been the work of dedicated volunteers for over half a
-century. The result is widespread availability: sites like ManyBooks and
-Google Play Books put public domain titles in front of millions of readers every
-day. But the editions they distribute are mostly raw transcriptions —
-Project Gutenberg text repackaged with a new cover.
-
-In other words: the books are available, but the editions are poor in terms of presentation quality, and arguably, faithfulness to the orginal texts.
+## The library is enormous. The shelves are nearly empty.
 
 ![The Public Domain Funnel](/img/pd-funnel.png)
 
-## Our Inspiration
+There are an estimated **30 to 40 million** public domain works in existence —
+books whose copyrights have expired, belonging to everyone and no one.
+Transcribing them into digital form has been the work of dedicated volunteers for
+over half a century. 
 
-**[Project Gutenberg](https://www.gutenberg.org/)**, founded in 1971, has produced roughly 78,000
-electronic texts in 54 years — a monumental achievement representing about
-**0.2%** of what exists.
+**[Project Gutenberg](https://www.gutenberg.org/)**, the largest and oldest such effort, has
+produced roughly 78,000 texts in 54 years — a monumental achievement, but still
+only about **0.2%** of the public domain corpus.
 
-**[Standard Ebooks](https://standardebooks.org)**, founded around 2015, takes
-those texts and transforms them into beautifully designed, professionally
-typeset ebooks. In 11 years they have produced roughly **1,400 titles** —
-about 0.004% of the public domain.
+Quality varies widely even within that small fraction. Some transcriptions are
+meticulous; others carry errors from scanning, OCR, or human transcription. Most
+readers, however, never encounter these texts directly. They reach them through
+distributors — sites like ManyBooks and Google Play Books — that take
+transcriptions and redistribute them with little to no effort to format them as
+an enjoyable modern reading experience.
+
+[Standard Ebooks](https://standardebooks.org) has set out to change this, taking
+selected Gutenberg texts and transforming them into beautifully designed,
+professionally typeset ebooks. They represent the gold standard. But even their
+output — roughly 1,400 titles in 11 years — covers only a small fraction of what
+Project Gutenberg has transcribed, let alone the public domain as a whole.
 
 The gap between what millions of people are reading and what they *deserve* to be reading — in a format that does justice to the work — is immense.
 
